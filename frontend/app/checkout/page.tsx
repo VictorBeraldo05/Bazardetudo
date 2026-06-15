@@ -15,6 +15,7 @@ const checkoutSchema = z.object({
   fullName: z.string().min(3),
   email: z.string().email(),
   phone: z.string().min(8),
+  document: z.string().min(11),
   address: z.string().min(5),
   shipping: z.enum(["entrega", "retirada"]),
   payment: z.enum(["pix", "cartao", "manual"])
@@ -35,6 +36,7 @@ export default function CheckoutPage() {
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       phone: "",
+      document: "",
       shipping: "entrega",
       payment: "pix"
     }
@@ -59,7 +61,8 @@ export default function CheckoutPage() {
       const customer = await upsertCustomer({
         full_name: values.fullName,
         email: values.email,
-        phone: values.phone
+        phone: values.phone,
+        document: values.document.replace(/\D/g, "")
       });
 
       const order = await checkoutOrder({
@@ -92,6 +95,7 @@ export default function CheckoutPage() {
             <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="Nome completo" {...form.register("fullName")} />
             <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="E-mail" {...form.register("email")} />
             <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="WhatsApp" {...form.register("phone")} />
+            <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="CPF" {...form.register("document")} />
             <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="Endereco" {...form.register("address")} />
             <select className="rounded-2xl border border-black/10 px-4 py-3" {...form.register("shipping")}>
               <option value="entrega">Entrega</option>
@@ -134,4 +138,3 @@ export default function CheckoutPage() {
     </main>
   );
 }
-

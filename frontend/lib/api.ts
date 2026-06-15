@@ -62,6 +62,16 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
+    const contentType = response.headers.get("Content-Type") ?? "";
+    if (contentType.includes("application/json")) {
+      const payload = await response.json().catch(() => null);
+      const detailValue = payload?.detail;
+      const detail =
+        (Array.isArray(detailValue) ? detailValue[0]?.msg : detailValue) ??
+        payload?.message ??
+        null;
+      throw new Error(detail || "Falha na comunicacao com a API");
+    }
     const errorText = await response.text();
     throw new Error(errorText || "Falha na comunicacao com a API");
   }
@@ -143,6 +153,19 @@ export async function upsertCustomer(payload: {
   document?: string;
 }) {
   return requestJson<{ id: string; full_name: string; email: string }>("/customers", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function registerCustomer(payload: {
+  full_name: string;
+  email: string;
+  phone: string;
+  document: string;
+  password: string;
+}) {
+  return requestJson<{ id: string; full_name: string; email: string }>("/customers/register", {
     method: "POST",
     body: JSON.stringify(payload)
   });

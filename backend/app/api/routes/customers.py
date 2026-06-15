@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import admin_guard, db_session
 from app.core.security import get_password_hash
 from app.models.customer import Customer
-from app.schemas.customer import CustomerCreate, CustomerRead
+from app.schemas.customer import CustomerCreate, CustomerRead, CustomerRegister
 
 
 router = APIRouter()
@@ -35,6 +35,27 @@ def create_or_update_customer(payload: CustomerCreate, db: Session = Depends(db_
         )
         db.add(customer)
 
+    db.commit()
+    db.refresh(customer)
+    return customer
+
+
+@router.post("/register", response_model=CustomerRead)
+def register_customer(payload: CustomerRegister, db: Session = Depends(db_session)) -> Customer:
+    existing = db.scalar(select(Customer).where(Customer.email == payload.email))
+    if existing:
+        raise HTTPException(status_code=409, detail="Ja existe uma conta com este e-mail")
+
+    customer = Customer(
+        full_name=payload.full_name,
+        email=payload.email,
+        phone=payload.phone,
+        document=payload.document,
+        password_hash=get_password_hash(payload.password),
+        is_active=True,
+        is_admin=False,
+    )
+    db.add(customer)
     db.commit()
     db.refresh(customer)
     return customer

@@ -1,5 +1,5 @@
 from pydantic import EmailStr
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas.common import TimestampSchema
 
@@ -19,3 +19,11 @@ class CustomerCreate(BaseModel):
     phone: str | None = None
     document: str | None = None
     password: str | None = None
+
+
+class CustomerRegister(BaseModel):
+    full_name: str = Field(min_length=3)
+    email: EmailStr
+    phone: str = Field(min_length=8)
+    document: str = Field(min_length=11, max_length=14)
+    password: str = Field(min_length=6)
