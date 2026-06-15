@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,6 +20,25 @@ class Settings(BaseSettings):
     whatsapp_api_token: str = "change-me"
     store_whatsapp: str = "5519998253607"
 
+    @field_validator("backend_cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value: str | list[str]) -> list[str]:
+        if isinstance(value, list):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip()
+            if not normalized:
+                return []
+            if normalized.startswith("["):
+                import json
+
+                parsed = json.loads(normalized)
+                if not isinstance(parsed, list):
+                    raise ValueError("BACKEND_CORS_ORIGINS JSON must be a list")
+                return [str(item) for item in parsed]
+            return [item.strip() for item in normalized.split(",") if item.strip()]
+        raise ValueError("Invalid BACKEND_CORS_ORIGINS value")
+
 
 @lru_cache
 def get_settings() -> Settings:
@@ -27,4 +46,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-
