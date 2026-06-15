@@ -20,6 +20,18 @@ class Settings(BaseSettings):
     whatsapp_api_token: str = "change-me"
     store_whatsapp: str = "5519998253607"
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def normalize_database_url(cls, value: str) -> str:
+        if not isinstance(value, str):
+            raise ValueError("DATABASE_URL must be a string")
+        normalized = value.strip()
+        if normalized.startswith("postgresql://"):
+            return normalized.replace("postgresql://", "postgresql+psycopg://", 1)
+        if normalized.startswith("postgres://"):
+            return normalized.replace("postgres://", "postgresql+psycopg://", 1)
+        return normalized
+
     @field_validator("backend_cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: str | list[str]) -> list[str]:
