@@ -13,20 +13,30 @@ export default function CartPage() {
 
   return (
     <main className="shell py-8">
-      <div className="grid gap-8 md:grid-cols-[1.2fr_0.8fr]">
+      <div className="mb-8 rounded-[2rem] bg-[#111111] px-6 py-8 text-white md:px-8">
+        <p className="text-sm uppercase tracking-[0.24em] text-white/55">Carrinho</p>
+        <h1 className="mt-2 font-display text-4xl">Revise seus itens antes de finalizar.</h1>
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr]">
         <section className="space-y-4">
-          <h1 className="font-display text-4xl">Carrinho</h1>
-          {items.length === 0 ? <p className="text-black/60">Seu carrinho ainda esta vazio.</p> : null}
+          {items.length === 0 ? (
+            <div className="rounded-[2rem] border border-black/5 bg-white p-8 text-black/60 shadow-card">
+              Seu carrinho ainda esta vazio.
+            </div>
+          ) : null}
+
           {items.map((item) => (
-            <div key={item.id} className="rounded-[2rem] border border-black/5 bg-white/75 p-5 shadow-card">
+            <div key={item.id} className="rounded-[2rem] border border-black/5 bg-white p-5 shadow-card">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-semibold">{item.name}</p>
-                  <p className="text-sm text-black/50">Quantidade: {item.quantity}</p>
+                  <p className="text-lg font-semibold text-black">{item.name}</p>
+                  <p className="mt-1 text-sm text-black/50">{item.category}</p>
+                  <p className="mt-2 text-sm text-black/58">Quantidade: {item.quantity}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">{money(item.price * item.quantity)}</p>
-                  <button className="text-sm text-black/50" onClick={() => removeItem(item.id)}>
+                  <p className="text-xl font-semibold text-black">{money(item.price * item.quantity)}</p>
+                  <button className="mt-2 text-sm text-black/50" onClick={() => removeItem(item.id)}>
                     Remover
                   </button>
                 </div>
@@ -34,21 +44,26 @@ export default function CartPage() {
             </div>
           ))}
         </section>
-        <aside className="rounded-[2rem] border border-black/5 bg-white/75 p-6 shadow-card">
-          <h2 className="font-display text-2xl">Resumo</h2>
+
+        <aside className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
+          <h2 className="text-2xl font-semibold text-black">Resumo</h2>
           <div className="mt-6 space-y-3 text-sm text-black/60">
             <div className="flex justify-between"><span>Subtotal</span><span>{money(total)}</span></div>
-            <div className="flex justify-between"><span>Frete estimado</span><span>R$ 39,90</span></div>
-            <div className="flex justify-between"><span>Cupom</span><span>- R$ 0,00</span></div>
+            <div className="flex justify-between"><span>Frete estimado</span><span>{money(items.length ? 39.9 : 0)}</span></div>
+            <div className="flex justify-between"><span>Descontos</span><span>{money(0)}</span></div>
           </div>
           <div className="mt-6 border-t border-black/5 pt-4">
-            <div className="flex justify-between font-semibold"><span>Total</span><span>{money(total + 39.9)}</span></div>
+            <div className="flex justify-between text-lg font-semibold text-black">
+              <span>Total</span>
+              <span>{money(total + (items.length ? 39.9 : 0))}</span>
+            </div>
           </div>
           <Link href="/checkout" className="block">
-            <Button className="mt-6 w-full" disabled={items.length === 0}>Ir para checkout</Button>
+            <Button className="mt-6 w-full" disabled={items.length === 0}>Finalizar compra</Button>
           </Link>
         </aside>
       </div>
     </main>
   );
 }
+

@@ -1,10 +1,13 @@
 export default function AdminSettingsPage() {
   return (
-    <main className="shell py-8">
-      <h1 className="font-display text-4xl">Configuracoes</h1>
-      <div className="mt-6 rounded-[2rem] border border-black/5 bg-white/75 p-6 shadow-card">
-        <p className="text-black/65">Area prevista para parametros de loja, gateways e automacoes de WhatsApp.</p>
-      </div>
+    <main className="space-y-6">
+      <section className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
+        <p className="text-sm uppercase tracking-[0.24em] text-black/45">Configuracoes</p>
+        <h1 className="mt-2 font-display text-4xl text-black">Preferencias da operacao</h1>
+        <p className="mt-3 text-sm text-black/60">
+          Aqui entram parametros de loja, integracoes, meios de pagamento e campanhas.
+        </p>
+      </section>
     </main>
   );
 }

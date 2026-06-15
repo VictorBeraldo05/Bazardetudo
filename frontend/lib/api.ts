@@ -94,6 +94,7 @@ export function mapApiProduct(product: ApiProduct, categories: Category[]): Prod
     compareAtPrice: Number(product.compare_at_price ?? product.sale_price),
     tags: product.tags ? product.tags.split(",").map((item) => item.trim()).filter(Boolean) : [],
     featured: product.featured,
+    isOffer: product.is_offer,
     image:
       primaryImage ??
       "https://images.unsplash.com/photo-1484101403633-562f891dc89a?auto=format&fit=crop&w=1200&q=80"
@@ -158,4 +159,12 @@ export async function checkoutOrder(payload: {
     method: "POST",
     body: JSON.stringify(payload)
   });
+}
+
+export function getFeaturedProducts(products: Product[]) {
+  return products.filter((product) => product.featured);
+}
+
+export function getOfferProducts(products: Product[]) {
+  return products.filter((product) => product.isOffer || product.tags.some((tag) => /oferta|promocao/i.test(tag)));
 }

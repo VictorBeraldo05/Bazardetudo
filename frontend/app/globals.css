@@ -5,11 +5,13 @@
 @tailwind utilities;
 
 :root {
-  --background: #f7f5f2;
-  --foreground: #0a0a0a;
-  --muted: #57534e;
-  --card: rgba(255, 255, 255, 0.82);
-  --border: rgba(10, 10, 10, 0.08);
+  --background: #f5f4f0;
+  --foreground: #0e0e11;
+  --muted: #5b5b63;
+  --card: rgba(255, 255, 255, 0.92);
+  --border: rgba(14, 14, 17, 0.08);
+  --accent: #111111;
+  --soft: #e9e4da;
 }
 
 * {
@@ -23,7 +25,7 @@ html {
 body {
   margin: 0;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(247, 245, 242, 0.98)),
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.98), rgba(245, 244, 240, 0.9) 45%, rgba(233, 228, 218, 0.45)),
     var(--background);
   color: var(--foreground);
   font-family: "Poppins", sans-serif;
@@ -35,7 +37,7 @@ a {
 }
 
 .shell {
-  max-width: 1200px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 0 1rem 6rem;
 }
@@ -46,3 +48,7 @@ a {
   }
 }
 
+.store-grid {
+  display: grid;
+  gap: 1rem;
+}

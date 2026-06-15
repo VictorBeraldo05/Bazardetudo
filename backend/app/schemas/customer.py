@@ -10,6 +10,7 @@ class CustomerRead(TimestampSchema):
     phone: str | None = None
     document: str | None = None
     is_active: bool
+    is_admin: bool
 
 
 class CustomerCreate(BaseModel):

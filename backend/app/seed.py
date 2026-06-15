@@ -57,13 +57,27 @@ def run_seed() -> None:
     if not db.query(Admin).first():
         db.add(Admin(full_name="Admin BDT", email="admin@bazardetudo.com", password_hash=get_password_hash("admin123")))
 
-    if not db.query(Customer).first():
+    admin_customer = db.query(Customer).filter(Customer.email == "admin@bazardetudo.com").first()
+    if not admin_customer:
+        db.add(
+            Customer(
+                full_name="Admin BDT",
+                email="admin@bazardetudo.com",
+                phone="5519998253607",
+                password_hash=get_password_hash("admin123"),
+                is_admin=True,
+            )
+        )
+
+    demo_customer = db.query(Customer).filter(Customer.email == "cliente@bazardetudo.com").first()
+    if not demo_customer:
         db.add(
             Customer(
                 full_name="Cliente Demo",
                 email="cliente@bazardetudo.com",
                 phone="5519999999999",
                 password_hash=get_password_hash("cliente123"),
+                is_admin=False,
             )
         )
 

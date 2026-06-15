@@ -11,6 +11,7 @@ export type Product = {
   compareAtPrice: number;
   tags: string[];
   featured?: boolean;
+  isOffer?: boolean;
   image: string;
 };
 
@@ -28,6 +29,7 @@ export const products: Product[] = [
     compareAtPrice: 1790,
     tags: ["Novo lote", "Ultima unidade"],
     featured: true,
+    isOffer: true,
     image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80"
   },
   {
@@ -42,6 +44,7 @@ export const products: Product[] = [
     price: 349,
     compareAtPrice: 499,
     tags: ["Oferta", "Promocao"],
+    isOffer: true,
     image: "https://images.unsplash.com/photo-1585515656825-7d02ec5aac64?auto=format&fit=crop&w=1200&q=80"
   },
   {
@@ -56,6 +59,7 @@ export const products: Product[] = [
     price: 890,
     compareAtPrice: 1290,
     tags: ["Retirada imediata"],
+    featured: true,
     image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80"
   }
 ];
@@ -69,3 +73,13 @@ export const dashboardStats = [
   { label: "Ticket medio", value: "R$ 742" }
 ];
 
+export const topSearches = [
+  "Sofas",
+  "Geladeiras",
+  "Air Fryer",
+  "Mesa de jantar",
+  "Decoracao",
+  "Colchoes",
+  "Armarios",
+  "Promocoes"
+];

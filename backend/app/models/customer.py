@@ -24,4 +24,4 @@ class Customer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     document: Mapped[str | None] = mapped_column(String(20), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)

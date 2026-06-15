@@ -31,6 +31,7 @@ def create_or_update_customer(payload: CustomerCreate, db: Session = Depends(db_
             document=payload.document,
             password_hash=get_password_hash(payload.password or "temporary123"),
             is_active=True,
+            is_admin=False,
         )
         db.add(customer)
 

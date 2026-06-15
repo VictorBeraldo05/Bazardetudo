@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import jwt
 from passlib.context import CryptContext
@@ -17,7 +18,13 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_token(subject: str, token_type: str, expires_minutes: int) -> str:
+def create_token(subject: str, token_type: str, expires_minutes: int, extra_claims: dict[str, Any] | None = None) -> str:
     expire = datetime.now(UTC) + timedelta(minutes=expires_minutes)
     payload = {"sub": subject, "type": token_type, "exp": expire}
+    if extra_claims:
+        payload.update(extra_claims)
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
+
+
+def decode_token(token: str) -> dict[str, Any]:
+    return jwt.decode(token, settings.secret_key, algorithms=["HS256"])

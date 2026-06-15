@@ -81,33 +81,57 @@ export default function CheckoutPage() {
 
   return (
     <main className="shell py-8">
-      <div className="max-w-3xl space-y-6">
-        <h1 className="font-display text-4xl">Checkout</h1>
-        <div className="rounded-[2rem] border border-black/5 bg-black p-5 text-white">
-          <p className="text-sm text-white/70">Resumo do pedido</p>
-          <p className="mt-2 text-2xl font-semibold">{money(subtotal + (form.watch("shipping") === "retirada" ? 0 : shippingAmount))}</p>
-          <p className="mt-2 text-sm text-white/70">{items.length} item(ns) aguardando reserva transacional.</p>
-        </div>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 rounded-[2rem] border border-black/5 bg-white/75 p-6 shadow-card">
-          <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="Nome completo" {...form.register("fullName")} />
-          <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="E-mail" {...form.register("email")} />
-          <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="WhatsApp" {...form.register("phone")} />
-          <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="Endereco" {...form.register("address")} />
-          <select className="rounded-2xl border border-black/10 px-4 py-3" {...form.register("shipping")}>
-            <option value="entrega">Entrega</option>
-            <option value="retirada">Retirada</option>
-          </select>
-          <select className="rounded-2xl border border-black/10 px-4 py-3" {...form.register("payment")}>
-            <option value="pix">Pix</option>
-            <option value="cartao">Cartao</option>
-            <option value="manual">Pagamento manual</option>
-          </select>
-          <Button type="submit" disabled={submitting || items.length === 0}>
-            {submitting ? "Processando..." : "Confirmar pedido"}
-          </Button>
-          {feedback ? <p className="text-sm text-red-600">{feedback}</p> : null}
-        </form>
+      <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+        <section className="space-y-6">
+          <div className="rounded-[2rem] bg-[#111111] p-8 text-white shadow-card">
+            <p className="text-sm uppercase tracking-[0.24em] text-white/55">Checkout</p>
+            <h1 className="mt-3 font-display text-4xl">Finalize sua compra em poucos passos.</h1>
+          </div>
+
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
+            <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="Nome completo" {...form.register("fullName")} />
+            <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="E-mail" {...form.register("email")} />
+            <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="WhatsApp" {...form.register("phone")} />
+            <input className="rounded-2xl border border-black/10 px-4 py-3" placeholder="Endereco" {...form.register("address")} />
+            <select className="rounded-2xl border border-black/10 px-4 py-3" {...form.register("shipping")}>
+              <option value="entrega">Entrega</option>
+              <option value="retirada">Retirada na loja</option>
+            </select>
+            <select className="rounded-2xl border border-black/10 px-4 py-3" {...form.register("payment")}>
+              <option value="pix">Pix</option>
+              <option value="cartao">Cartao</option>
+              <option value="manual">Pagamento combinado</option>
+            </select>
+            <Button type="submit" disabled={submitting || items.length === 0}>
+              {submitting ? "Processando..." : "Confirmar pedido"}
+            </Button>
+            {feedback ? <p className="text-sm text-red-600">{feedback}</p> : null}
+          </form>
+        </section>
+
+        <aside className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
+          <h2 className="text-2xl font-semibold text-black">Resumo do pedido</h2>
+          <div className="mt-6 space-y-4">
+            {items.map((item) => (
+              <div key={item.id} className="rounded-[1.5rem] bg-[#f6f2eb] p-4">
+                <p className="font-semibold text-black">{item.name}</p>
+                <p className="mt-1 text-sm text-black/55">{money(item.price)} x {item.quantity}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 space-y-3 text-sm text-black/60">
+            <div className="flex justify-between"><span>Subtotal</span><span>{money(subtotal)}</span></div>
+            <div className="flex justify-between"><span>Frete</span><span>{money(form.watch("shipping") === "retirada" ? 0 : shippingAmount)}</span></div>
+          </div>
+          <div className="mt-6 border-t border-black/5 pt-4">
+            <div className="flex justify-between text-lg font-semibold text-black">
+              <span>Total</span>
+              <span>{money(subtotal + (form.watch("shipping") === "retirada" ? 0 : shippingAmount))}</span>
+            </div>
+          </div>
+        </aside>
       </div>
     </main>
   );
 }
+
