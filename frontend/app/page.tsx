@@ -13,30 +13,30 @@ export default async function HomePage() {
   const spotlight = offers[0] ?? featured[0];
 
   return (
-    <main className="shell space-y-6 py-3 md:space-y-8 md:py-5">
-      <section className="grid gap-3 lg:grid-cols-[1.15fr_0.85fr] md:gap-4">
-        <div className="rounded-[1.7rem] bg-gradient-to-br from-[#1f1b18] via-[#2b241d] to-[#6f4f35] p-5 text-white shadow-card md:rounded-[1.9rem] md:p-7">
+    <main className="shell space-y-5 py-2 md:space-y-8 md:py-5">
+      <section className="grid gap-2.5 lg:grid-cols-[1.15fr_0.85fr] md:gap-4">
+        <div className="rounded-[1.5rem] bg-gradient-to-br from-[#1f1b18] via-[#2b241d] to-[#6f4f35] p-4 text-white shadow-card md:rounded-[1.9rem] md:p-7">
           <p className="text-xs uppercase tracking-[0.28em] text-white/65">Oferta em foco</p>
-          <h1 className="mt-2 max-w-xl font-display text-[2rem] leading-tight md:mt-3 md:text-4xl">
+          <h1 className="mt-2 max-w-xl font-display text-[1.85rem] leading-tight md:mt-3 md:text-4xl">
             {spotlight?.name ?? "As melhores oportunidades da vitrine"}
           </h1>
-          <div className="mt-3 flex flex-wrap items-end gap-x-3 gap-y-1 md:mt-4">
-            <p className="text-[2.35rem] font-bold leading-none md:text-3xl">{spotlight ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(spotlight.price) : ""}</p>
+          <div className="mt-2.5 flex flex-wrap items-end gap-x-3 gap-y-1 md:mt-4">
+            <p className="text-[2.1rem] font-bold leading-none md:text-3xl">{spotlight ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(spotlight.price) : ""}</p>
             {spotlight ? <p className="text-sm text-white/55 line-through">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(spotlight.compareAtPrice)}</p> : null}
           </div>
-          <div className="mt-4 flex flex-wrap gap-2 md:mt-5 md:gap-3">
+          <div className="mt-3.5 flex flex-wrap gap-2 md:mt-5 md:gap-3">
             <Link href="/catalogo?filtro=ofertas"><Button className="bg-[#d9482f] px-4 py-2.5 text-white hover:opacity-95 md:px-5 md:py-3">Ver promocoes</Button></Link>
             <Link href="/catalogo"><Button variant="outline" className="border-white/15 bg-white/10 px-4 py-2.5 text-white hover:bg-white/15 md:px-5 md:py-3">Abrir catalogo</Button></Link>
           </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 md:gap-4">
-          <div className="rounded-[1.5rem] border border-black/5 bg-[#fff1e8] p-4 shadow-card md:rounded-[1.9rem] md:p-5">
+          <div className="rounded-[1.35rem] border border-black/5 bg-[#fff1e8] p-3.5 shadow-card md:rounded-[1.9rem] md:p-5">
             <p className="text-xs uppercase tracking-[0.24em] text-[#d9482f]">Promocoes</p>
             <p className="mt-1 text-3xl font-bold text-black md:mt-2 md:text-4xl">{offers.length}</p>
             <p className="mt-1 text-sm text-black/58">Itens com desconto visivel logo de entrada.</p>
           </div>
-          <div className="rounded-[1.5rem] border border-black/5 bg-white p-4 shadow-card md:rounded-[1.9rem] md:p-5">
+          <div className="rounded-[1.35rem] border border-black/5 bg-white p-3.5 shadow-card md:rounded-[1.9rem] md:p-5">
             <div className="flex flex-wrap gap-2">
               <Link href="/catalogo?filtro=ofertas"><span className="inline-flex rounded-full bg-[#d9482f] px-3 py-1 text-xs font-semibold text-white">Ofertas</span></Link>
               <Link href="/catalogo"><span className="inline-flex rounded-full bg-[#f2eadf] px-3 py-1 text-xs font-semibold text-black">Catalogo</span></Link>

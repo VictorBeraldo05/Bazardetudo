@@ -18,7 +18,10 @@ export async function POST(request: Request) {
 
   const result = await response.json().catch(() => null);
   if (!response.ok || !result) {
-    return NextResponse.json({ message: "Credenciais invalidas" }, { status: response.status || 401 });
+    return NextResponse.json(
+      { message: result?.detail ?? result?.message ?? "Credenciais invalidas" },
+      { status: response.status || 401 }
+    );
   }
 
   const isAdmin = Boolean(result.user?.is_admin);

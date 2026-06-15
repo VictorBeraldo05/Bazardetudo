@@ -34,24 +34,24 @@ export function SiteHeader() {
       </div>
 
       <div className="shell pb-0 pt-2 md:pt-3">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-          <Link href="/" className="flex items-center gap-3">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
+          <Link href="/" className="flex items-center gap-2.5">
             <Image src="/logo-bazar.png" alt="Bazar de Tudo" width={68} height={68} className="h-12 w-12 rounded-[1.15rem] border border-black/5 bg-white object-cover p-1 md:h-14 md:w-14 md:rounded-2xl" />
             <div>
-              <p className="font-display text-[2.15rem] leading-none tracking-tight text-black md:text-3xl">Bazar de Tudo</p>
-              <p className="text-[10px] uppercase tracking-[0.22em] text-black/45 md:text-xs md:tracking-[0.24em]">casa, eletros, decoracao e oportunidades</p>
+              <p className="font-display text-[1.9rem] leading-none tracking-tight text-black md:text-3xl">Bazar de Tudo</p>
+              <p className="text-[9px] uppercase tracking-[0.18em] text-black/45 md:text-xs md:tracking-[0.24em]">casa, eletros, decoracao e oportunidades</p>
             </div>
           </Link>
 
           <div className="w-full flex-1">
-            <div className="flex h-11 overflow-hidden rounded-[1.2rem] border border-black/10 bg-white shadow-sm md:h-14 md:rounded-2xl">
+            <div className="flex h-10 overflow-hidden rounded-[1.1rem] border border-black/10 bg-white shadow-sm md:h-14 md:rounded-2xl">
               <input
                 aria-label="Buscar produtos"
                 placeholder="Buscar produtos, categorias e oportunidades"
-                className="flex-1 border-0 px-4 text-sm text-black outline-none md:px-5"
+                className="flex-1 border-0 px-4 text-[15px] text-black outline-none md:px-5 md:text-sm"
               />
               <button className="flex w-14 items-center justify-center bg-[#8b6743] text-white md:w-16">
-                <Search size={18} />
+                <Search size={17} />
               </button>
             </div>
             <div className="mt-2 hidden flex-wrap gap-x-4 gap-y-2 text-xs text-black/55 md:flex">
@@ -62,22 +62,22 @@ export function SiteHeader() {
           </div>
 
           <div className="grid w-full grid-cols-4 gap-2 md:flex md:w-auto md:items-center">
-            <Link href="/favoritos" className="flex items-center justify-center rounded-[1.2rem] border border-black/10 bg-white p-2.5 text-black/80 md:rounded-2xl md:p-3">
-              <Heart size={19} />
+            <Link href="/favoritos" className="flex items-center justify-center rounded-[1rem] border border-black/10 bg-white p-2 text-black/80 md:rounded-2xl md:p-3">
+              <Heart size={18} />
             </Link>
-            <Link href="/perfil" className="flex items-center justify-center rounded-[1.2rem] border border-black/10 bg-white p-2.5 text-black/80 md:rounded-2xl md:p-3">
-              <User size={19} />
+            <Link href="/perfil" className="flex items-center justify-center rounded-[1rem] border border-black/10 bg-white p-2 text-black/80 md:rounded-2xl md:p-3">
+              <User size={18} />
             </Link>
-            <Link href="/carrinho" className="relative flex items-center justify-center rounded-[1.2rem] border border-black/10 bg-white p-2.5 text-black md:rounded-2xl md:p-3">
-              <ShoppingCart size={19} />
+            <Link href="/carrinho" className="relative flex items-center justify-center rounded-[1rem] border border-black/10 bg-white p-2 text-black md:rounded-2xl md:p-3">
+              <ShoppingCart size={18} />
               {count > 0 ? (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#8b6743] text-[10px] font-semibold text-white md:-right-2 md:-top-2 md:h-6 md:w-6 md:text-[11px]">
                   {count}
                 </span>
               ) : null}
             </Link>
-            <button className="flex items-center justify-center rounded-[1.2rem] border border-black/10 bg-white p-2.5 text-black md:hidden">
-              <Menu size={19} />
+            <button className="flex items-center justify-center rounded-[1rem] border border-black/10 bg-white p-2 text-black md:hidden">
+              <Menu size={18} />
             </button>
           </div>
         </div>
