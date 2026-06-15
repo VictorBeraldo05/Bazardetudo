@@ -2,12 +2,11 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { ADMIN_COOKIE, AUTH_TOKEN_COOKIE } from "@/lib/admin-auth";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+import { getBackendApiUrl } from "@/lib/backend-url";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as { email?: string; password?: string };
-  const response = await fetch(`${API_URL}/auth/login`, {
+  const response = await fetch(`${getBackendApiUrl()}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

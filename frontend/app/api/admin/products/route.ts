@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 
 import { cookies } from "next/headers";
 import { AUTH_TOKEN_COOKIE } from "@/lib/admin-auth";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+import { getBackendApiUrl } from "@/lib/backend-url";
 
 export async function POST(request: Request) {
   const payload = await request.json();
@@ -13,7 +12,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Sessao administrativa ausente" }, { status: 401 });
   }
 
-  const response = await fetch(`${API_URL}/products`, {
+  const response = await fetch(`${getBackendApiUrl()}/products`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

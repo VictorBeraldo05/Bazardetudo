@@ -52,7 +52,8 @@ export function getSessionToken() {
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
+  const target = path.startsWith("/api/") ? path : `${API_URL}${path}`;
+  const response = await fetch(target, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -136,7 +137,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 }
 
 export async function reserveProduct(productId: string, quantity: number) {
-  return requestJson<{ cart_id: string; reserved_until: string }>("/orders/reserve", {
+  return requestJson<{ cart_id: string; reserved_until: string }>("/api/store/orders/reserve", {
     method: "POST",
     body: JSON.stringify({
       product_id: productId,
@@ -152,7 +153,7 @@ export async function upsertCustomer(payload: {
   phone?: string;
   document?: string;
 }) {
-  return requestJson<{ id: string; full_name: string; email: string }>("/customers", {
+  return requestJson<{ id: string; full_name: string; email: string }>("/api/store/customers", {
     method: "POST",
     body: JSON.stringify(payload)
   });
@@ -165,7 +166,7 @@ export async function registerCustomer(payload: {
   document: string;
   password: string;
 }) {
-  return requestJson<{ id: string; full_name: string; email: string }>("/customers/register", {
+  return requestJson<{ id: string; full_name: string; email: string }>("/api/store/customers/register", {
     method: "POST",
     body: JSON.stringify(payload)
   });
@@ -178,7 +179,7 @@ export async function checkoutOrder(payload: {
   discount_amount: number;
   notes?: string;
 }) {
-  return requestJson<{ id: string; order_number: string; total_amount: string }>("/orders/checkout", {
+  return requestJson<{ id: string; order_number: string; total_amount: string }>("/api/store/orders/checkout", {
     method: "POST",
     body: JSON.stringify(payload)
   });
