@@ -33,9 +33,9 @@ export function ProductCard({ product }: { product: Product }) {
           </Link>
           <p className="hidden line-clamp-2 text-sm text-black/56 md:block">{product.description}</p>
         </div>
-        <div className="flex items-end justify-between gap-2 md:gap-3">
+        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-3">
           <div className="min-w-0">
-            <p className="text-xl font-bold text-[#171717] md:text-2xl">{money(product.price)}</p>
+            <p className="text-[1.7rem] font-bold leading-none text-[#171717] md:text-2xl">{money(product.price)}</p>
             <div className="flex items-center gap-1.5 md:gap-2">
               <p className="text-xs text-black/38 line-through md:text-sm">{money(product.compareAtPrice)}</p>
               {discount > 0 ? <span className="hidden text-xs font-semibold text-[#d9482f] md:inline">Economize {discount}%</span> : null}
@@ -44,7 +44,7 @@ export function ProductCard({ product }: { product: Product }) {
           <Button
             onClick={() => addItem(product)}
             disabled={product.status !== "available"}
-            className="h-9 rounded-xl bg-[#171717] px-3 text-[11px] text-white hover:opacity-95 md:px-4 md:py-2 md:text-xs"
+            className="h-9 w-full rounded-xl bg-[#171717] px-3 text-[11px] text-white hover:opacity-95 sm:w-auto md:px-4 md:py-2 md:text-xs"
           >
             {product.status === "available" ? "Comprar" : "Indisp."}
           </Button>
