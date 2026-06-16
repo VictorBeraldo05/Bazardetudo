@@ -1,9 +1,39 @@
-export default function ProfilePage() {
+import { cookies } from "next/headers";
+import Link from "next/link";
+
+import { AUTH_USER_COOKIE } from "@/lib/admin-auth";
+
+type AuthUser = {
+  id: string;
+  full_name: string;
+  email: string;
+  is_admin: boolean;
+};
+
+export default async function ProfilePage() {
+  const rawUser = (await cookies()).get(AUTH_USER_COOKIE)?.value;
+  const user = rawUser ? (JSON.parse(rawUser) as AuthUser) : null;
+
+  if (!user) {
+    return (
+      <main className="shell py-8">
+        <div className="mx-auto max-w-2xl rounded-[2rem] bg-white p-8 shadow-card">
+          <h1 className="font-display text-4xl text-black">Entre para ver seu perfil</h1>
+          <p className="mt-3 text-black/60">Sua conta ainda nao esta autenticada nesta sessao.</p>
+          <div className="mt-6 flex gap-3">
+            <Link href="/login" className="rounded-full bg-black px-5 py-3 text-sm text-white">Entrar</Link>
+            <Link href="/cadastro" className="rounded-full border border-black/10 px-5 py-3 text-sm text-black">Criar conta</Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="shell space-y-6 py-8">
-      <section className="rounded-[2rem] bg-[#111111] p-8 text-white shadow-card">
+    <main className="shell space-y-6 py-6 md:py-8">
+      <section className="rounded-[2rem] bg-[#111111] p-6 text-white shadow-card md:p-8">
         <p className="text-sm uppercase tracking-[0.24em] text-white/55">Minha conta</p>
-        <h1 className="mt-3 font-display text-4xl">Perfil e acompanhamento</h1>
+        <h1 className="mt-2 font-display text-4xl">Perfil e acompanhamento</h1>
         <p className="mt-3 max-w-2xl text-sm text-white/70">
           Dados pessoais, historico de pedidos, favoritos e notificacoes em um unico lugar.
         </p>
@@ -13,10 +43,9 @@ export default function ProfilePage() {
         <section className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
           <h2 className="text-xl font-semibold text-black">Dados pessoais</h2>
           <div className="mt-5 grid gap-3 text-sm text-black/65">
-            <p><strong className="text-black">Nome:</strong> Cliente Demo</p>
-            <p><strong className="text-black">E-mail:</strong> cliente@bazardetudo.com</p>
-            <p><strong className="text-black">WhatsApp:</strong> (19) 99999-9999</p>
-            <p><strong className="text-black">Endereco:</strong> Sao Mateus</p>
+            <p><strong className="text-black">Nome:</strong> {user.full_name}</p>
+            <p><strong className="text-black">E-mail:</strong> {user.email}</p>
+            <p><strong className="text-black">Perfil:</strong> {user.is_admin ? "Administrador" : "Cliente"}</p>
           </div>
         </section>
 
@@ -38,4 +67,3 @@ export default function ProfilePage() {
     </main>
   );
 }
-

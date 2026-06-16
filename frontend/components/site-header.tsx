@@ -19,7 +19,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-black/5 bg-[#fffdf9]/95 text-black backdrop-blur-xl">
       <div className="border-b border-black/5 bg-[#d9482f] text-white">
-        <div className="shell flex min-h-9 items-center justify-between gap-3 pb-0 text-[11px] text-white/90 md:min-h-11 md:text-xs">
+        <div className="shell flex min-h-8 items-center justify-between gap-3 pb-0 text-[11px] text-white/90 md:min-h-8 md:text-[11px]">
           <div className="hidden flex-wrap items-center gap-4 md:flex">
             <span>Loja online oficial</span>
             <span>Entrega, retirada e atendimento pelo WhatsApp</span>
@@ -33,7 +33,7 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <div className="shell pb-0 pt-2 md:pt-3">
+      <div className="shell pb-0 pt-2 md:pt-2">
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
           <Link href="/" className="flex items-center gap-2.5">
             <Image src="/logo-bazar.png" alt="Bazar de Tudo" width={68} height={68} className="h-12 w-12 rounded-[1.15rem] border border-black/5 bg-white object-cover p-1 md:h-14 md:w-14 md:rounded-2xl" />
@@ -82,7 +82,7 @@ export function SiteHeader() {
           </div>
         </div>
 
-        <nav className="mt-3 hidden items-center gap-6 overflow-x-auto pb-3 text-sm font-medium text-black/72 md:flex">
+        <nav className="mt-2 hidden items-center gap-6 overflow-x-auto pb-2 text-sm font-medium text-black/72 md:flex">
           <Link href="/catalogo">Catalogo completo</Link>
           <Link href="/catalogo?filtro=ofertas">Promocoes</Link>
           <Link href="/catalogo?filtro=moveis">Moveis</Link>

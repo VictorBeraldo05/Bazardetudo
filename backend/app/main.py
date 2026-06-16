@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import inspect, text
 
 from app.api.router import api_router
 from app.core.config import settings
@@ -30,8 +31,22 @@ def healthcheck() -> dict[str, str]:
 
 @app.on_event("startup")
 def on_startup() -> None:
-    if settings.environment == "development":
-        Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    ensure_backward_compatible_columns()
+
+
+def ensure_backward_compatible_columns() -> None:
+    inspector = inspect(engine)
+    if not inspector.has_table("customers"):
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("customers")}
+    if "is_admin" in existing_columns:
+        return
+
+    alter_sql = "ALTER TABLE customers ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT FALSE"
+    with engine.begin() as connection:
+        connection.execute(text(alter_sql))
 
 
 app.include_router(api_router, prefix=settings.api_v1_str)
