@@ -11,6 +11,7 @@ import { useCartStore } from "@/store/cart-store";
 export function SiteHeader() {
   const pathname = usePathname();
   const count = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
+  const frame = "mx-auto max-w-[1320px] px-4 md:px-8";
 
   if (pathname.startsWith("/admin")) {
     return null;
@@ -19,7 +20,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-black/5 bg-[#fffdf9]/95 text-black backdrop-blur-xl">
       <div className="border-b border-black/5 bg-[#d9482f] text-white">
-        <div className="shell flex min-h-8 items-center justify-between gap-3 pb-0 text-[11px] text-white/90 md:min-h-8 md:text-[11px]">
+        <div className={`${frame} flex min-h-8 items-center justify-between gap-3 text-[11px] text-white/90 md:min-h-8 md:text-[11px]`}>
           <div className="hidden flex-wrap items-center gap-4 md:flex">
             <span>Loja online oficial</span>
             <span>Entrega, retirada e atendimento pelo WhatsApp</span>
@@ -33,7 +34,7 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <div className="shell pb-0 pt-2 md:pt-2">
+      <div className={`${frame} pt-2 md:pt-2`}>
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
           <Link href="/" className="flex items-center gap-2.5">
             <Image src="/logo-bazar.png" alt="Bazar de Tudo" width={68} height={68} className="h-12 w-12 rounded-[1.15rem] border border-black/5 bg-white object-cover p-1 md:h-14 md:w-14 md:rounded-2xl" />
