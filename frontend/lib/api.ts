@@ -80,12 +80,20 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 export async function getCategories(): Promise<Category[]> {
   try {
     return await requestJson<Category[]>("/categories");
   } catch {
     return fallbackCategories.map((name, index) => ({ id: String(index), name, slug: name.toLowerCase() }));
   }
+}
+
+export async function getCategoriesStrict(): Promise<Category[]> {
+  return requestJson<Category[]>("/categories");
 }
 
 export function mapApiProduct(product: ApiProduct, categories: Category[]): Product {
@@ -122,6 +130,14 @@ export async function getProducts(): Promise<Product[]> {
   } catch {
     return fallbackProductMap();
   }
+}
+
+export async function getProductsStrict(): Promise<Product[]> {
+  const [categories, products] = await Promise.all([
+    getCategoriesStrict(),
+    requestJson<ApiProduct[]>("/products")
+  ]);
+  return products.map((product) => mapApiProduct(product, categories));
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -191,4 +207,8 @@ export function getFeaturedProducts(products: Product[]) {
 
 export function getOfferProducts(products: Product[]) {
   return products.filter((product) => product.isOffer || product.tags.some((tag) => /oferta|promocao/i.test(tag)));
+}
+
+export function hasRealCategoryIds(categories: Category[]) {
+  return categories.every((category) => isUuid(category.id));
 }

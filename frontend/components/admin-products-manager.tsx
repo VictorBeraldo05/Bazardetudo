@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
-import type { Category } from "@/lib/api";
+import { hasRealCategoryIds, type Category } from "@/lib/api";
 import type { Product } from "@/lib/data";
 import { money } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,17 +19,21 @@ function FieldHelp({ label, help }: { label: string; help: string }) {
 
 export function AdminProductsManager({
   categories,
-  initialProducts
+  initialProducts,
+  loadError
 }: {
   categories: Category[];
   initialProducts: Product[];
+  loadError: string | null;
 }) {
   const [products, setProducts] = useState(initialProducts);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [filter, setFilter] = useState("todos");
   const [query, setQuery] = useState("");
+  const canSubmit = categories.length > 0 && hasRealCategoryIds(categories) && !loadError;
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -61,6 +65,11 @@ export function AdminProductsManager({
   }
 
   async function handleSubmit(formData: FormData) {
+    if (!canSubmit) {
+      setMessage("As categorias reais do backend nao foram carregadas. O cadastro foi bloqueado para evitar dados invalidos.");
+      return;
+    }
+
     setLoading(true);
     setMessage(null);
 
@@ -127,6 +136,7 @@ export function AdminProductsManager({
 
   async function handleDelete(productId: string) {
     setMessage(null);
+    setDeletingId(productId);
 
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
@@ -142,6 +152,8 @@ export function AdminProductsManager({
       setMessage("Produto excluido com sucesso.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Falha ao excluir produto.");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -152,6 +164,11 @@ export function AdminProductsManager({
           <h2 className="text-2xl font-semibold text-black">Novo produto</h2>
           <p className="text-sm text-black/58">Preencha os dados da vitrine e escolha uma imagem principal para o cliente ver na home e no catalogo.</p>
         </div>
+        {loadError ? (
+          <div className="rounded-[1.25rem] bg-[#fff1e8] px-4 py-3 text-sm text-[#9a3b25]">
+            {loadError}
+          </div>
+        ) : null}
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -243,7 +260,7 @@ export function AdminProductsManager({
           </label>
         </div>
 
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading || !canSubmit}>
           {loading ? "Salvando..." : "Cadastrar produto"}
         </Button>
         {message ? <p className="text-sm text-black/60">{message}</p> : null}
@@ -296,8 +313,13 @@ export function AdminProductsManager({
                     <span className="rounded-full border border-black/10 px-3 py-1 capitalize text-black/60">{product.status}</span>
                   </div>
                   <div className="mt-3">
-                    <button onClick={() => handleDelete(product.id)} className="text-sm font-medium text-[#b13f2b]">
-                      Excluir produto
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(product.id)}
+                      disabled={deletingId === product.id}
+                      className="text-sm font-medium text-[#b13f2b] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {deletingId === product.id ? "Excluindo..." : "Excluir produto"}
                     </button>
                   </div>
                 </div>

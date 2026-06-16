@@ -1,8 +1,17 @@
 import { AdminProductsManager } from "@/components/admin-products-manager";
-import { getCategories, getProducts } from "@/lib/api";
+import { getCategoriesStrict, getProductsStrict, type Category } from "@/lib/api";
+import type { Product } from "@/lib/data";
 
 export default async function AdminProductsPage() {
-  const [categories, products] = await Promise.all([getCategories(), getProducts()]);
+  let categories: Category[] = [];
+  let products: Product[] = [];
+  let loadError: string | null = null;
+
+  try {
+    [categories, products] = await Promise.all([getCategoriesStrict(), getProductsStrict()]);
+  } catch {
+    loadError = "Nao foi possivel carregar categorias e produtos reais do backend. Verifique se o Render esta online e atualizado.";
+  }
 
   return (
     <main className="space-y-6">
@@ -14,7 +23,7 @@ export default async function AdminProductsPage() {
         </p>
       </section>
 
-      <AdminProductsManager categories={categories} initialProducts={products} />
+      <AdminProductsManager categories={categories} initialProducts={products} loadError={loadError} />
     </main>
   );
 }
