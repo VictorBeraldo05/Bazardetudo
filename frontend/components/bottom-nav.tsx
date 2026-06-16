@@ -22,8 +22,8 @@ export function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-3 left-1/2 z-50 w-[calc(100%-1rem)] max-w-lg -translate-x-1/2 rounded-[1.5rem] border border-white/30 bg-[#111111] px-2 py-1.5 text-white shadow-2xl md:hidden">
-      <div className="grid grid-cols-5 gap-1">
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#111111] px-3 pb-[calc(env(safe-area-inset-bottom)+0.3rem)] pt-2 text-white shadow-[0_-18px_50px_rgba(0,0,0,0.35)] md:hidden">
+      <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
         {items.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;

@@ -40,7 +40,7 @@ a {
 .shell {
   max-width: 1320px;
   margin: 0 auto;
-  padding: 0 1rem 6rem;
+  padding: 0 1rem 7.5rem;
 }
 
 @media (min-width: 768px) {
