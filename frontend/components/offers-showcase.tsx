@@ -40,9 +40,6 @@ export function OffersShowcase({ products }: { products: Product[] }) {
               <h1 className="mt-2 max-w-xl font-display text-[1.55rem] leading-tight text-white sm:text-[1.8rem] md:mt-3 md:text-4xl lg:text-[3.2rem]">
                 {product.name}
               </h1>
-              <p className="mt-2 line-clamp-2 max-w-lg text-xs leading-5 text-white/74 sm:text-sm md:mt-3 md:line-clamp-none md:text-base md:leading-6">
-                {product.description}
-              </p>
               <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1 md:mt-5 md:gap-x-3">
                 <p className="text-[1.9rem] font-bold leading-none sm:text-[2.1rem] md:text-[2.75rem]">{money(product.price)}</p>
                 <p className="text-sm text-white/45 line-through md:text-base">{money(product.compareAtPrice)}</p>

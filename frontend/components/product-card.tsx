@@ -13,38 +13,38 @@ export function ProductCard({ product }: { product: Product }) {
   const discount = Math.max(0, Math.round((1 - product.price / product.compareAtPrice) * 100));
 
   return (
-    <article className="overflow-hidden rounded-[1.4rem] border border-black/5 bg-white shadow-card transition duration-200 hover:-translate-y-1">
+    <article className="overflow-hidden rounded-[1.15rem] border border-black/5 bg-white shadow-card transition duration-200 hover:-translate-y-1 md:rounded-[1.4rem]">
       <div className="relative aspect-[4/4.15] overflow-hidden bg-[#f6f1e8]">
         <Image src={product.image} alt={product.name} fill className="object-cover" />
-        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+        <div className="absolute left-2 top-2 flex flex-wrap gap-1.5 md:left-3 md:top-3 md:gap-2">
           {discount > 0 ? (
-            <span className="rounded-full bg-[#d9482f] px-3 py-1 text-xs font-semibold text-white">-{discount}%</span>
+            <span className="rounded-full bg-[#d9482f] px-2 py-0.5 text-[10px] font-semibold text-white md:px-3 md:py-1 md:text-xs">-{discount}%</span>
           ) : null}
           {product.featured ? (
-            <span className="rounded-full bg-white/92 px-3 py-1 text-xs font-semibold text-black">Destaque</span>
+            <span className="rounded-full bg-white/92 px-2 py-0.5 text-[10px] font-semibold text-black md:px-3 md:py-1 md:text-xs">Destaque</span>
           ) : null}
         </div>
       </div>
-      <div className="space-y-3 p-4">
-        <div className="space-y-1.5">
-          <p className="text-xs uppercase tracking-[0.2em] text-black/40">{product.category}</p>
-          <Link href={`/produto/${product.slug}`} className="line-clamp-2 min-h-11 text-base font-semibold leading-tight text-black md:text-lg">
+      <div className="space-y-2 p-3 md:space-y-3 md:p-4">
+        <div className="space-y-1 md:space-y-1.5">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-black/40 md:text-xs md:tracking-[0.2em]">{product.category}</p>
+          <Link href={`/produto/${product.slug}`} className="line-clamp-2 min-h-9 text-sm font-semibold leading-tight text-black md:min-h-11 md:text-lg">
             {product.name}
           </Link>
-          <p className="line-clamp-2 text-sm text-black/56">{product.description}</p>
+          <p className="hidden line-clamp-2 text-sm text-black/56 md:block">{product.description}</p>
         </div>
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex items-end justify-between gap-2 md:gap-3">
           <div className="min-w-0">
-            <p className="text-2xl font-bold text-[#171717]">{money(product.price)}</p>
-            <div className="flex items-center gap-2">
-              <p className="text-sm text-black/38 line-through">{money(product.compareAtPrice)}</p>
-              {discount > 0 ? <span className="text-xs font-semibold text-[#d9482f]">Economize {discount}%</span> : null}
+            <p className="text-xl font-bold text-[#171717] md:text-2xl">{money(product.price)}</p>
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <p className="text-xs text-black/38 line-through md:text-sm">{money(product.compareAtPrice)}</p>
+              {discount > 0 ? <span className="hidden text-xs font-semibold text-[#d9482f] md:inline">Economize {discount}%</span> : null}
             </div>
           </div>
           <Button
             onClick={() => addItem(product)}
             disabled={product.status !== "available"}
-            className="rounded-xl bg-[#171717] px-4 py-2 text-xs text-white hover:opacity-95"
+            className="h-9 rounded-xl bg-[#171717] px-3 text-[11px] text-white hover:opacity-95 md:px-4 md:py-2 md:text-xs"
           >
             {product.status === "available" ? "Comprar" : "Indisp."}
           </Button>
