@@ -201,6 +201,25 @@ export async function checkoutOrder(payload: {
   });
 }
 
+export async function createProductArrivalAlert(payload: {
+  customer_name?: string;
+  customer_email: string;
+  desired_product: string;
+  category_name?: string;
+  notes?: string;
+}) {
+  return requestJson<{
+    id: string;
+    status: string;
+    message: string;
+    already_available: boolean;
+    matched_product_id?: string | null;
+  }>("/api/store/alerts/product-arrival", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
 export function getFeaturedProducts(products: Product[]) {
   return products.filter((product) => product.featured);
 }

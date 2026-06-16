@@ -1,4 +1,6 @@
-from sqlalchemy import ForeignKey, String, Text
+from datetime import datetime
+
+from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -33,3 +35,17 @@ class Notification(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     channel: Mapped[str] = mapped_column(String(30), default="system")
     status: Mapped[str] = mapped_column(String(20), default="unread")
 
+
+class ProductArrivalAlert(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "product_arrival_alerts"
+
+    customer_id: Mapped[str | None] = mapped_column(ForeignKey("customers.id"), nullable=True)
+    customer_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    customer_email: Mapped[str] = mapped_column(String(120), index=True)
+    desired_product: Mapped[str] = mapped_column(String(180), index=True)
+    normalized_query: Mapped[str] = mapped_column(String(180), index=True)
+    category_name: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(30), default="active", index=True)
+    matched_product_id: Mapped[str | None] = mapped_column(ForeignKey("products.id"), nullable=True)
+    notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

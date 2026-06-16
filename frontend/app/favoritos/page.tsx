@@ -1,16 +1,20 @@
-import { ProductCard } from "@/components/product-card";
-import { products } from "@/lib/data";
+import { cookies } from "next/headers";
 
-export default function FavoritesPage() {
-  return (
-    <main className="shell py-8">
-      <h1 className="font-display text-4xl">Favoritos</h1>
-      <div className="mt-6 grid gap-5 md:grid-cols-3">
-        {products.slice(0, 2).map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
-    </main>
-  );
+import { FavoritesAlertsClient } from "@/components/favorites-alerts-client";
+import { AUTH_USER_COOKIE } from "@/lib/admin-auth";
+import { getCategories, getProducts } from "@/lib/api";
+
+type AuthUser = {
+  id: string;
+  full_name: string;
+  email: string;
+  is_admin: boolean;
+};
+
+export default async function FavoritesPage() {
+  const rawUser = (await cookies()).get(AUTH_USER_COOKIE)?.value;
+  const user = rawUser ? (JSON.parse(rawUser) as AuthUser) : null;
+  const [categories, products] = await Promise.all([getCategories(), getProducts()]);
+
+  return <FavoritesAlertsClient categories={categories} products={products} user={user} />;
 }
-

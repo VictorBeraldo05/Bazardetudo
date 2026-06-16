@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import admin_guard, db_session
 from app.models.catalog import Product, ProductImage
 from app.schemas.catalog import ProductCreate, ProductRead
+from app.services.product_alerts import notify_matching_alerts
 
 
 router = APIRouter()
@@ -54,6 +55,7 @@ def create_product(payload: ProductCreate, db: Session = Depends(db_session)) ->
             )
         )
 
+    notify_matching_alerts(db, product)
     db.commit()
     db.refresh(product)
     return product

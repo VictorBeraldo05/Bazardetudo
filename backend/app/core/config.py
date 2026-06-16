@@ -19,6 +19,13 @@ class Settings(BaseSettings):
     whatsapp_base_url: str = "https://provider.example.com"
     whatsapp_api_token: str = "change-me"
     store_whatsapp: str = "5519998253607"
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str | None = None
+    smtp_from_name: str = "Bazar de Tudo"
+    smtp_use_tls: bool = True
 
     @field_validator("database_url", mode="before")
     @classmethod
