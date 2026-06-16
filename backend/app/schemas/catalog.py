@@ -33,6 +33,8 @@ class ProductCreate(BaseModel):
     tags: str | None = None
     featured: bool = False
     is_offer: bool = False
+    image_url: str | None = None
+    image_alt_text: str | None = None
 
 
 class ProductRead(TimestampSchema):

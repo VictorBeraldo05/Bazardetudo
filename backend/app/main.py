@@ -37,16 +37,14 @@ def on_startup() -> None:
 
 def ensure_backward_compatible_columns() -> None:
     inspector = inspect(engine)
-    if not inspector.has_table("customers"):
-        return
-
-    existing_columns = {column["name"] for column in inspector.get_columns("customers")}
-    if "is_admin" in existing_columns:
-        return
-
-    alter_sql = "ALTER TABLE customers ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT FALSE"
     with engine.begin() as connection:
-        connection.execute(text(alter_sql))
+        if inspector.has_table("customers"):
+            existing_columns = {column["name"] for column in inspector.get_columns("customers")}
+            if "is_admin" not in existing_columns:
+                connection.execute(text("ALTER TABLE customers ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT FALSE"))
+
+        if inspector.has_table("product_images") and engine.dialect.name == "postgresql":
+            connection.execute(text("ALTER TABLE product_images ALTER COLUMN image_url TYPE TEXT"))
 
 
 app.include_router(api_router, prefix=settings.api_v1_str)

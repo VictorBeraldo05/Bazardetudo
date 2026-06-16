@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import admin_guard, db_session
-from app.models.catalog import Product
+from app.models.catalog import Product, ProductImage
 from app.schemas.catalog import ProductCreate, ProductRead
 
 
@@ -38,8 +38,33 @@ def get_product(product_id: str, db: Session = Depends(db_session)) -> Product:
 
 @router.post("", response_model=ProductRead, dependencies=[Depends(admin_guard)])
 def create_product(payload: ProductCreate, db: Session = Depends(db_session)) -> Product:
-    product = Product(**payload.model_dump())
+    product = Product(
+        **payload.model_dump(exclude={"image_url", "image_alt_text"})
+    )
     db.add(product)
+    db.flush()
+
+    if payload.image_url:
+        db.add(
+            ProductImage(
+                product_id=product.id,
+                image_url=payload.image_url,
+                alt_text=payload.image_alt_text or product.name,
+                position=0,
+            )
+        )
+
     db.commit()
     db.refresh(product)
     return product
+
+
+@router.delete("/{product_id}", dependencies=[Depends(admin_guard)])
+def delete_product(product_id: str, db: Session = Depends(db_session)) -> dict[str, str]:
+    product = db.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Produto nao encontrado")
+
+    db.delete(product)
+    db.commit()
+    return {"status": "deleted"}

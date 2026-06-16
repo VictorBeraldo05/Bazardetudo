@@ -43,9 +43,8 @@ class ProductImage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "product_images"
 
     product_id: Mapped[str] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), index=True)
-    image_url: Mapped[str] = mapped_column(String(255))
+    image_url: Mapped[str] = mapped_column(Text)
     alt_text: Mapped[str | None] = mapped_column(String(180), nullable=True)
     position: Mapped[int] = mapped_column(Integer, default=0)
 
     product: Mapped["Product"] = relationship(back_populates="images")
-
