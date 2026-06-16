@@ -18,23 +18,22 @@ export default async function HomePage() {
         <div className="mb-4 md:mb-5">
           <h2 className="font-display text-2xl text-black md:text-3xl">Produtos em destaque</h2>
         </div>
+        <div className="mb-4 md:hidden">
+          <div className="flex h-11 overflow-hidden rounded-[1.15rem] border border-black/10 bg-white shadow-sm">
+            <input
+              aria-label="Buscar produtos"
+              placeholder="Buscar produtos, categorias e oportunidades"
+              className="flex-1 border-0 px-4 text-[15px] text-black outline-none"
+            />
+            <button className="flex w-14 items-center justify-center bg-[#8b6743] text-white">
+              <Search size={17} />
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-4">
           {latest.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
-        </div>
-      </section>
-
-      <section className="md:hidden">
-        <div className="flex h-11 overflow-hidden rounded-[1.15rem] border border-black/10 bg-white shadow-sm">
-          <input
-            aria-label="Buscar produtos"
-            placeholder="Buscar produtos, categorias e oportunidades"
-            className="flex-1 border-0 px-4 text-[15px] text-black outline-none"
-          />
-          <button className="flex w-14 items-center justify-center bg-[#8b6743] text-white">
-            <Search size={17} />
-          </button>
         </div>
       </section>
     </main>
