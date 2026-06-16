@@ -16,6 +16,37 @@ RESERVATION_MINUTES = 15
 
 
 class StockReservationService:
+    def add_stock(
+        self,
+        db: Session,
+        product_id: str,
+        quantity: int,
+        reason: str | None = None,
+        reference_id: str | None = None,
+    ) -> Product:
+        product = db.get(Product, product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail="Produto nao encontrado")
+        if quantity <= 0:
+            raise HTTPException(status_code=400, detail="Quantidade deve ser maior que zero")
+
+        product.quantity += quantity
+        if product.quantity > 0 and product.status in {"sold", "available"}:
+            product.status = "available"
+
+        db.add(
+            InventoryMovement(
+                product_id=product.id,
+                movement_type="entry",
+                quantity=quantity,
+                reason=reason or "Entrada manual de estoque",
+                reference_id=reference_id,
+            )
+        )
+        db.commit()
+        db.refresh(product)
+        return product
+
     def reserve_product(self, db: Session, product_id: str, session_token: str, quantity: int = 1) -> Cart:
         product = db.get(Product, product_id)
         if not product:

@@ -54,11 +54,3 @@ class ProductRead(TimestampSchema):
     featured: bool
     is_offer: bool
     images: list[ProductImageRead] = []
-
-
-class InventoryMovementRead(TimestampSchema):
-    product_id: str
-    movement_type: str
-    quantity: int
-    reason: str | None = None
-    reference_id: str | None = None

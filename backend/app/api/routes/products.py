@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import admin_guard, db_session
 from app.models.catalog import Product, ProductImage
+from app.models.inventory import InventoryMovement
 from app.schemas.catalog import ProductCreate, ProductRead
 from app.services.product_alerts import notify_matching_alerts
 
@@ -52,6 +53,17 @@ def create_product(payload: ProductCreate, db: Session = Depends(db_session)) ->
                 image_url=payload.image_url,
                 alt_text=payload.image_alt_text or product.name,
                 position=0,
+            )
+        )
+
+    if product.quantity > 0:
+        db.add(
+            InventoryMovement(
+                product_id=product.id,
+                movement_type="entry",
+                quantity=product.quantity,
+                reason="Cadastro inicial do produto",
+                reference_id=product.id,
             )
         )
 
