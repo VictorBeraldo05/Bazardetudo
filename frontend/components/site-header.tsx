@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Bell, Heart, Search, ShoppingCart, User } from "lucide-react";
+import { Heart, Search, ShoppingCart, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { topSearches } from "@/lib/data";
@@ -19,22 +19,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-black/5 bg-[#fffdf9]/95 text-black backdrop-blur-xl">
-      <div className="border-b border-black/5 bg-[#d9482f] text-white">
-        <div className={`${frame} flex min-h-8 items-center justify-between gap-3 text-[11px] text-white/90 md:min-h-8 md:text-[11px]`}>
-          <div className="hidden flex-wrap items-center gap-4 md:flex">
-            <span>Loja online oficial</span>
-            <span>Entrega, retirada e atendimento pelo WhatsApp</span>
-          </div>
-          <div className="flex items-center gap-3 md:gap-4">
-            <Link href="/perfil" className="flex items-center gap-1 md:hidden"><Bell size={13} /></Link>
-            <Link href="/perfil" className="hidden items-center gap-1 md:flex"><Bell size={14} /> Notificacoes</Link>
-            <Link href="/contato" className="hidden md:block">Ajuda</Link>
-            <Link href="/login" className="font-medium text-white">Entrar</Link>
-          </div>
-        </div>
-      </div>
-
-      <div className={`${frame} pt-2 md:pt-2`}>
+      <div className={`${frame} py-2 md:pt-2`}>
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
           <Link href="/" className="flex items-center gap-2.5">
             <Image src="/logo-bazar.png" alt="Bazar de Tudo" width={68} height={68} className="h-12 w-12 rounded-[1.15rem] border border-black/5 bg-white object-cover p-1 md:h-14 md:w-14 md:rounded-2xl" />
@@ -44,7 +29,7 @@ export function SiteHeader() {
             </div>
           </Link>
 
-          <div className="w-full flex-1">
+          <div className="hidden w-full flex-1 md:block">
             <div className="flex h-10 overflow-hidden rounded-[1.1rem] border border-black/10 bg-white shadow-sm md:h-14 md:rounded-2xl">
               <input
                 aria-label="Buscar produtos"
