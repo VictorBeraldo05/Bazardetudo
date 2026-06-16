@@ -58,7 +58,7 @@ export function CatalogClient({
   }, [category, priceRange, products, search, status]);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
+    <div className="grid gap-8 overflow-x-hidden lg:grid-cols-[280px_1fr]">
       <aside className="hidden space-y-6 rounded-[2rem] border border-black/5 bg-white p-6 shadow-card lg:block">
         <div>
           <p className="text-sm font-semibold text-black">Buscar</p>
@@ -116,7 +116,7 @@ export function CatalogClient({
         </div>
       </aside>
 
-      <section>
+      <section className="min-w-0">
         <div className="mb-4 space-y-4 lg:hidden">
           <div className="flex h-11 overflow-hidden rounded-[1.15rem] border border-black/10 bg-white shadow-sm">
             <div className="flex w-11 items-center justify-center text-black/45">
@@ -130,7 +130,7 @@ export function CatalogClient({
             />
           </div>
 
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          <div className="min-w-0 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
             {categoryOptions.map((item) => (
               <button
                 key={item}
@@ -144,11 +144,11 @@ export function CatalogClient({
             ))}
           </div>
 
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2">
             <select
               value={priceRange}
               onChange={(event) => setPriceRange(event.target.value)}
-              className="h-11 rounded-2xl border border-black/10 bg-white px-3 text-sm text-black outline-none"
+              className="min-w-0 h-11 rounded-2xl border border-black/10 bg-white px-3 text-sm text-black outline-none"
             >
               {priceOptions.map((item) => (
                 <option key={item.value} value={item.value}>
@@ -160,7 +160,7 @@ export function CatalogClient({
             <select
               value={status}
               onChange={(event) => setStatus(event.target.value)}
-              className="h-11 rounded-2xl border border-black/10 bg-white px-3 text-sm text-black outline-none"
+              className="min-w-0 h-11 rounded-2xl border border-black/10 bg-white px-3 text-sm text-black outline-none"
             >
               {statusOptions.map((item) => (
                 <option key={item} value={item}>
