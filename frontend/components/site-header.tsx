@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Bell, Heart, Menu, Search, ShoppingCart, User } from "lucide-react";
+import { Bell, Heart, Search, ShoppingCart, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { topSearches } from "@/lib/data";
@@ -62,7 +62,7 @@ export function SiteHeader() {
             </div>
           </div>
 
-          <div className="grid w-full grid-cols-4 gap-2 md:flex md:w-auto md:items-center">
+          <div className="hidden md:flex md:w-auto md:items-center md:gap-2">
             <Link href="/favoritos" className="flex items-center justify-center rounded-[1rem] border border-black/10 bg-white p-2 text-black/80 md:rounded-2xl md:p-3">
               <Heart size={18} />
             </Link>
@@ -77,9 +77,6 @@ export function SiteHeader() {
                 </span>
               ) : null}
             </Link>
-            <button className="flex items-center justify-center rounded-[1rem] border border-black/10 bg-white p-2 text-black md:hidden">
-              <Menu size={18} />
-            </button>
           </div>
         </div>
 
