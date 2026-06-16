@@ -9,6 +9,25 @@ import type { Product } from "@/lib/data";
 import { money } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
+function createSlug(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+}
+
+function createShortDescription(value: string) {
+  const name = value.trim();
+  if (!name) {
+    return "";
+  }
+
+  return `${name} com visual atrativo, boa apresentacao na vitrine e destaque para venda imediata.`;
+}
+
 function FieldHelp({ label, help }: { label: string; help: string }) {
   return (
     <div className="space-y-1">
@@ -35,6 +54,11 @@ export function AdminProductsManager({
   const [preview, setPreview] = useState<string | null>(null);
   const [filter, setFilter] = useState("todos");
   const [query, setQuery] = useState("");
+  const [nameValue, setNameValue] = useState("");
+  const [slugValue, setSlugValue] = useState("");
+  const [descriptionValue, setDescriptionValue] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [descriptionTouched, setDescriptionTouched] = useState(false);
   const canSubmit = categories.length > 0 && hasRealCategoryIds(categories) && !loadError;
 
   const filteredProducts = useMemo(() => {
@@ -64,6 +88,29 @@ export function AdminProductsManager({
     const reader = new FileReader();
     reader.onload = () => setPreview(typeof reader.result === "string" ? reader.result : null);
     reader.readAsDataURL(file);
+  }
+
+  function handleNameChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const nextName = event.target.value;
+    setNameValue(nextName);
+
+    if (!slugTouched) {
+      setSlugValue(createSlug(nextName));
+    }
+
+    if (!descriptionTouched) {
+      setDescriptionValue(createShortDescription(nextName));
+    }
+  }
+
+  function handleSlugChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setSlugTouched(true);
+    setSlugValue(createSlug(event.target.value));
+  }
+
+  function handleDescriptionChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    setDescriptionTouched(true);
+    setDescriptionValue(event.target.value);
   }
 
   async function handleSubmit(formData: FormData) {
@@ -134,6 +181,11 @@ export function AdminProductsManager({
 
       setMessage("Produto cadastrado com sucesso.");
       setPreview(null);
+      setNameValue("");
+      setSlugValue("");
+      setDescriptionValue("");
+      setSlugTouched(false);
+      setDescriptionTouched(false);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Falha ao cadastrar produto.");
     } finally {
@@ -186,17 +238,38 @@ export function AdminProductsManager({
         <div className="grid gap-4 md:grid-cols-2">
           <div className="min-w-0 space-y-2">
             <FieldHelp label="Nome do produto" help="Use um titulo claro, como o cliente deve enxergar na vitrine." />
-            <input name="name" required placeholder="Ex.: Buffet Aparador Oslo" className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
+            <input
+              name="name"
+              required
+              value={nameValue}
+              onChange={handleNameChange}
+              placeholder="Ex.: Buffet Aparador Oslo"
+              className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3"
+            />
           </div>
           <div className="min-w-0 space-y-2">
             <FieldHelp label="Slug" help="Endereco do produto na URL. Use palavras separadas por hifen." />
-            <input name="slug" required placeholder="buffet-aparador-oslo" className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
+            <input
+              name="slug"
+              required
+              value={slugValue}
+              onChange={handleSlugChange}
+              placeholder="buffet-aparador-oslo"
+              className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3"
+            />
           </div>
         </div>
 
         <div className="space-y-2">
           <FieldHelp label="Descricao comercial" help="Resumo curto que ajuda a vender. Vai aparecer para o cliente." />
-          <textarea name="description" required placeholder="Descreva o produto, estilo, funcao e pontos fortes." className="min-h-28 w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
+          <textarea
+            name="description"
+            required
+            value={descriptionValue}
+            onChange={handleDescriptionChange}
+            placeholder="Descreva o produto, estilo, funcao e pontos fortes."
+            className="min-h-28 w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3"
+          />
         </div>
 
         <div className="space-y-2">
