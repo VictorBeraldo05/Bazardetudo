@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { hasRealCategoryIds, type Category } from "@/lib/api";
@@ -26,6 +27,7 @@ export function AdminProductsManager({
   initialProducts: Product[];
   loadError: string | null;
 }) {
+  const router = useRouter();
   const [products, setProducts] = useState(initialProducts);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -101,6 +103,11 @@ export function AdminProductsManager({
       });
 
       const result = await response.json().catch(() => null);
+      if (response.status === 401) {
+        router.push("/admin/login?next=/admin/produtos");
+        router.refresh();
+        throw new Error("Sua sessao administrativa expirou. Entre novamente para cadastrar produtos.");
+      }
       if (!response.ok || !result) {
         throw new Error(result?.detail ?? result?.message ?? "Falha ao cadastrar produto.");
       }
@@ -143,6 +150,12 @@ export function AdminProductsManager({
         method: "DELETE"
       });
 
+      if (response.status === 401) {
+        router.push("/admin/login?next=/admin/produtos");
+        router.refresh();
+        throw new Error("Sua sessao administrativa expirou. Entre novamente para excluir produtos.");
+      }
+
       if (!response.ok) {
         const result = await response.json().catch(() => null);
         throw new Error(result?.detail ?? result?.message ?? "Falha ao excluir produto.");
@@ -171,68 +184,68 @@ export function AdminProductsManager({
         ) : null}
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <FieldHelp label="Nome do produto" help="Use um titulo claro, como o cliente deve enxergar na vitrine." />
-            <input name="name" required placeholder="Ex.: Buffet Aparador Oslo" className="rounded-2xl border border-black/10 px-4 py-3" />
+            <input name="name" required placeholder="Ex.: Buffet Aparador Oslo" className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
           </div>
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <FieldHelp label="Slug" help="Endereco do produto na URL. Use palavras separadas por hifen." />
-            <input name="slug" required placeholder="buffet-aparador-oslo" className="rounded-2xl border border-black/10 px-4 py-3" />
+            <input name="slug" required placeholder="buffet-aparador-oslo" className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
           </div>
         </div>
 
         <div className="space-y-2">
           <FieldHelp label="Descricao comercial" help="Resumo curto que ajuda a vender. Vai aparecer para o cliente." />
-          <textarea name="description" required placeholder="Descreva o produto, estilo, funcao e pontos fortes." className="min-h-28 rounded-2xl border border-black/10 px-4 py-3" />
+          <textarea name="description" required placeholder="Descreva o produto, estilo, funcao e pontos fortes." className="min-h-28 w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
         </div>
 
         <div className="space-y-2">
           <FieldHelp label="Detalhes internos ou observacoes" help="Informacoes operacionais e detalhes do item. Nao e o titulo comercial." />
-          <textarea name="product_notes" placeholder="Estado, acabamento, informacoes adicionais e observacoes internas." className="min-h-24 rounded-2xl border border-black/10 px-4 py-3" />
+          <textarea name="product_notes" placeholder="Estado, acabamento, informacoes adicionais e observacoes internas." className="min-h-24 w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="min-w-0 space-y-2">
             <FieldHelp label="Categoria" help="Escolha onde esse produto deve aparecer no catalogo." />
-            <select name="category_id" required className="rounded-2xl border border-black/10 px-4 py-3">
+            <select name="category_id" required className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3">
               <option value="">Selecione</option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>{category.name}</option>
               ))}
             </select>
           </div>
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <FieldHelp label="Estado geral" help="Texto curto para o admin entender a condicao do item." />
-            <input name="condition" defaultValue="Muito bom" placeholder="Muito bom" className="rounded-2xl border border-black/10 px-4 py-3" />
+            <input name="condition" defaultValue="Muito bom" placeholder="Muito bom" className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
           </div>
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <FieldHelp label="SKU" help="Codigo interno unico para controle da operacao." />
-            <input name="sku" required placeholder="BDT-2001" className="rounded-2xl border border-black/10 px-4 py-3" />
+            <input name="sku" required placeholder="BDT-2001" className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="space-y-2">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="min-w-0 space-y-2">
             <FieldHelp label="Preco de custo" help="Quanto a loja pagou no item." />
-            <input name="cost_price" type="number" step="0.01" placeholder="0,00" className="rounded-2xl border border-black/10 px-4 py-3" />
+            <input name="cost_price" type="number" step="0.01" placeholder="0,00" className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
           </div>
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <FieldHelp label="Preco de venda" help="Preco que o cliente vai ver na vitrine." />
-            <input name="sale_price" type="number" step="0.01" required placeholder="0,00" className="rounded-2xl border border-black/10 px-4 py-3" />
+            <input name="sale_price" type="number" step="0.01" required placeholder="0,00" className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
           </div>
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <FieldHelp label="Preco de referencia" help="Valor antigo ou comparativo para mostrar economia." />
-            <input name="compare_at_price" type="number" step="0.01" placeholder="0,00" className="rounded-2xl border border-black/10 px-4 py-3" />
+            <input name="compare_at_price" type="number" step="0.01" placeholder="0,00" className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
           </div>
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <FieldHelp label="Quantidade" help="Numero disponivel para venda." />
-            <input name="quantity" type="number" min="1" defaultValue="1" placeholder="1" className="rounded-2xl border border-black/10 px-4 py-3" />
+            <input name="quantity" type="number" min="1" defaultValue="1" placeholder="1" className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
           </div>
         </div>
 
         <div className="space-y-2">
           <FieldHelp label="Tags" help="Palavras-chave separadas por virgula. Ex.: novo lote, pronta entrega, promocao" />
-          <input name="tags" placeholder="novo lote, pronta entrega, promocao" className="rounded-2xl border border-black/10 px-4 py-3" />
+          <input name="tags" placeholder="novo lote, pronta entrega, promocao" className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3" />
         </div>
 
         <div className="space-y-3 rounded-[1.5rem] bg-[#f7f2eb] p-4">

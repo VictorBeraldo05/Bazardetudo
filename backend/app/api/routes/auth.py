@@ -44,7 +44,7 @@ def login(payload: LoginRequest, db: Session = Depends(db_session)) -> TokenResp
             db.refresh(customer)
 
     claims = {"customer_id": customer.id, "is_admin": customer.is_admin, "name": customer.full_name}
-    access = create_token(customer.email, "access", 30, extra_claims=claims)
+    access = create_token(customer.email, "access", 60 * 12, extra_claims=claims)
     refresh = create_token(customer.email, "refresh", 60 * 24 * 7, extra_claims=claims)
     user = AuthUser(id=customer.id, full_name=customer.full_name, email=customer.email, is_admin=customer.is_admin)
     return TokenResponse(access_token=access, refresh_token=refresh, user=user)

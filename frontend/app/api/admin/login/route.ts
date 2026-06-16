@@ -1,8 +1,10 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { ADMIN_COOKIE, AUTH_TOKEN_COOKIE } from "@/lib/admin-auth";
+import { ADMIN_COOKIE, AUTH_TOKEN_COOKIE, AUTH_USER_COOKIE } from "@/lib/admin-auth";
 import { getBackendApiUrl } from "@/lib/backend-url";
+
+const SESSION_MAX_AGE = 60 * 60 * 12;
 
 export async function POST(request: Request) {
   const body = (await request.json()) as { email?: string; password?: string };
@@ -31,7 +33,7 @@ export async function POST(request: Request) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 12
+    maxAge: SESSION_MAX_AGE
   });
 
   cookieStore.set(AUTH_TOKEN_COOKIE, result.access_token, {
@@ -39,7 +41,15 @@ export async function POST(request: Request) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 30
+    maxAge: SESSION_MAX_AGE
+  });
+
+  cookieStore.set(AUTH_USER_COOKIE, JSON.stringify(result.user), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: SESSION_MAX_AGE
   });
 
   if (!isAdmin) {

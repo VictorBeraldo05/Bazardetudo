@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { AUTH_TOKEN_COOKIE, AUTH_USER_COOKIE, ADMIN_COOKIE } from "@/lib/admin-auth";
 import { getBackendApiUrl } from "@/lib/backend-url";
 
+const SESSION_MAX_AGE = 60 * 60 * 12;
+
 export async function POST(request: Request) {
   const body = await request.json();
   const response = await fetch(`${getBackendApiUrl()}/auth/login`, {
@@ -29,23 +31,22 @@ export async function POST(request: Request) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 30
+    maxAge: SESSION_MAX_AGE
   });
   cookieStore.set(AUTH_USER_COOKIE, JSON.stringify(result.user), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 12
+    maxAge: SESSION_MAX_AGE
   });
   cookieStore.set(ADMIN_COOKIE, result.user?.is_admin ? "1" : "0", {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 12
+    maxAge: SESSION_MAX_AGE
   });
 
   return NextResponse.json({ ok: true, user: result.user });
 }
-
