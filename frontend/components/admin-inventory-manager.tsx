@@ -1,9 +1,8 @@
 "use client";
 
-import { ArrowDownUp, BadgeAlert, Boxes, PackagePlus, Search, TrendingUp, Warehouse } from "lucide-react";
+import { AlertTriangle, Boxes, PackageCheck, PackagePlus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { money } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 type InventoryProduct = {
@@ -69,9 +68,18 @@ export function AdminInventoryManager({
   const [statusFilter, setStatusFilter] = useState("todos");
   const [productId, setProductId] = useState(initialOverview?.products[0]?.id ?? "");
   const [quantity, setQuantity] = useState("1");
-  const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(loadError);
+
+  const selectedProduct = useMemo(
+    () => (overview?.products ?? []).find((product) => product.id === productId) ?? null,
+    [overview, productId]
+  );
+
+  const criticalProducts = useMemo(
+    () => (overview?.products ?? []).filter((product) => product.quantity <= 2).slice(0, 6),
+    [overview]
+  );
 
   const filteredProducts = useMemo(() => {
     const products = overview?.products ?? [];
@@ -92,26 +100,6 @@ export function AdminInventoryManager({
       return matchesQuery && matchesStatus;
     });
   }, [overview, query, statusFilter]);
-
-  const selectedProduct = useMemo(
-    () => (overview?.products ?? []).find((product) => product.id === productId) ?? null,
-    [overview, productId]
-  );
-
-  const criticalProducts = useMemo(
-    () => (overview?.products ?? []).filter((product) => product.quantity <= 2).slice(0, 5),
-    [overview]
-  );
-
-  const stockValue = useMemo(
-    () => (overview?.products ?? []).reduce((total, product) => total + Number(product.cost_price) * product.quantity, 0),
-    [overview]
-  );
-
-  const salesPotential = useMemo(
-    () => (overview?.products ?? []).reduce((total, product) => total + Number(product.sale_price) * product.quantity, 0),
-    [overview]
-  );
 
   async function reloadOverview() {
     const response = await fetch("/api/admin/inventory", { cache: "no-store" });
@@ -137,7 +125,7 @@ export function AdminInventoryManager({
         body: JSON.stringify({
           product_id: productId,
           quantity: Number(quantity),
-          reason: reason || "Reposicao manual no painel"
+          reason: "Reposicao manual no painel"
         })
       });
       const result = await response.json().catch(() => null);
@@ -146,7 +134,6 @@ export function AdminInventoryManager({
       }
 
       await reloadOverview();
-      setReason("");
       setQuantity("1");
       setFeedback("Entrada registrada com sucesso e estoque atualizado.");
     } catch (error) {
@@ -160,51 +147,44 @@ export function AdminInventoryManager({
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Produtos cadastrados", value: stats?.total_products ?? 0, hint: "Catalogo ativo", icon: Warehouse },
-          { label: "Unidades em estoque", value: stats?.total_units ?? 0, hint: "Disponivel agora", icon: Boxes },
-          { label: "Itens criticos", value: (stats?.low_stock_products ?? 0) + (stats?.out_of_stock_products ?? 0), hint: "Baixo ou zerado", icon: BadgeAlert },
-          { label: "Valor em custo", value: money(stockValue), hint: "Capital parado em estoque", icon: ArrowDownUp },
-          { label: "Potencial de venda", value: money(salesPotential), hint: "Receita se tudo vender", icon: TrendingUp },
-          { label: "Entradas registradas", value: stats?.entries_count ?? 0, hint: "Historico de reposicao", icon: PackagePlus }
+          { label: "Produtos cadastrados", value: stats?.total_products ?? 0, hint: "Itens no catalogo", icon: Boxes },
+          { label: "Unidades em estoque", value: stats?.total_units ?? 0, hint: "Soma disponivel", icon: PackageCheck },
+          { label: "Estoque baixo", value: stats?.low_stock_products ?? 0, hint: "Ate 2 unidades", icon: AlertTriangle },
+          { label: "Entradas registradas", value: stats?.entries_count ?? 0, hint: "Reposicoes ja lancadas", icon: PackagePlus }
         ].map((card) => {
           const Icon = card.icon;
           return (
-          <div key={card.label} className="rounded-[1.6rem] border border-black/5 bg-white p-5 shadow-card">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm text-black/45">{card.label}</p>
-              <div className="rounded-2xl bg-[#f4ede1] p-2 text-[#8b6743]">
-                <Icon size={16} />
+            <div key={card.label} className="min-w-0 rounded-[1.6rem] border border-black/5 bg-white p-5 shadow-card">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-black/45">{card.label}</p>
+                <div className="rounded-2xl bg-[#f4ede1] p-2 text-[#8b6743]">
+                  <Icon size={16} />
+                </div>
               </div>
+              <p className="mt-3 text-3xl font-semibold text-black">{card.value}</p>
+              <p className="mt-2 text-sm text-black/55">{card.hint}</p>
             </div>
-            <p className="mt-3 text-3xl font-semibold text-black">{card.value}</p>
-            <p className="mt-2 text-sm text-black/55">{card.hint}</p>
-          </div>
-        )})}
+          );
+        })}
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(360px,0.72fr)_minmax(0,1.28fr)]">
+      <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
         <section className="min-w-0 rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <p className="text-sm uppercase tracking-[0.24em] text-black/45">Entrada rapida</p>
-              <h2 className="text-2xl font-semibold text-black">Reposicao de estoque</h2>
-              <p className="text-sm text-black/58">
-                Selecione o item, informe a quantidade e confirme. Sem burocracia.
-              </p>
-            </div>
-            <div className="rounded-[1.25rem] bg-[#111111] px-4 py-3 text-white">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-white/55">Saidas por venda</p>
-              <p className="mt-1 text-2xl font-semibold">{stats?.sales_count ?? 0}</p>
-            </div>
+          <div className="space-y-1">
+            <p className="text-sm uppercase tracking-[0.24em] text-black/45">Entrada rapida</p>
+            <h2 className="text-2xl font-semibold text-black">Registrar reposicao</h2>
+            <p className="text-sm text-black/58">
+              Selecione o produto e informe quantas unidades chegaram.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="mt-5 grid gap-4">
             <select
               value={productId}
               onChange={(event) => setProductId(event.target.value)}
-              className="rounded-2xl border border-black/10 px-4 py-3"
+              className="w-full rounded-2xl border border-black/10 px-4 py-3"
             >
               {(overview?.products ?? []).map((product) => (
                 <option key={product.id} value={product.id}>
@@ -215,63 +195,40 @@ export function AdminInventoryManager({
 
             {selectedProduct ? (
               <div className="rounded-[1.5rem] bg-[#f6f1e8] p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-semibold text-black">{selectedProduct.name}</p>
-                    <p className="mt-1 text-sm text-black/55">
-                      {selectedProduct.category_name} | SKU {selectedProduct.sku}
-                    </p>
-                  </div>
+                <p className="font-semibold text-black">{selectedProduct.name}</p>
+                <p className="mt-1 text-sm text-black/55">
+                  {selectedProduct.category_name} | SKU {selectedProduct.sku}
+                </p>
+                <div className="mt-3 flex items-center justify-between gap-3">
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${stockBadge(selectedProduct.quantity).className}`}>
-                    estoque atual {selectedProduct.quantity}
+                    {stockBadge(selectedProduct.quantity).label}
                   </span>
-                </div>
-                <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
-                  <div>
-                    <p className="text-black/45">Venda</p>
-                    <p className="mt-1 font-semibold text-black">{money(Number(selectedProduct.sale_price))}</p>
-                  </div>
-                  <div>
-                    <p className="text-black/45">Custo</p>
-                    <p className="mt-1 font-semibold text-black">{money(Number(selectedProduct.cost_price))}</p>
-                  </div>
-                  <div>
-                    <p className="text-black/45">Status</p>
-                    <p className="mt-1 font-semibold capitalize text-black">{selectedProduct.status}</p>
-                  </div>
+                  <span className="text-sm text-black/55">estoque atual: {selectedProduct.quantity}</span>
                 </div>
               </div>
             ) : null}
 
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-              <input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(event) => setQuantity(event.target.value)}
-                placeholder="Quantidade recebida"
-                className="rounded-2xl border border-black/10 px-4 py-3"
-              />
-              <div className="flex flex-wrap gap-2">
-                {[1, 5, 10, 20].map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => setQuantity(String(preset))}
-                    className="rounded-full border border-black/10 bg-[#f7f3ec] px-4 py-3 text-sm text-black transition hover:bg-[#efe4d4]"
-                  >
-                    +{preset}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <textarea
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              placeholder="Observacao opcional, se quiser registrar o motivo da reposicao."
-              className="min-h-20 rounded-2xl border border-black/10 px-4 py-3"
+            <input
+              type="number"
+              min="1"
+              value={quantity}
+              onChange={(event) => setQuantity(event.target.value)}
+              placeholder="Quantidade recebida"
+              className="w-full rounded-2xl border border-black/10 px-4 py-3"
             />
+
+            <div className="flex flex-wrap gap-2">
+              {[1, 5, 10, 20].map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setQuantity(String(preset))}
+                  className="rounded-full border border-black/10 bg-[#f7f3ec] px-4 py-2 text-sm text-black transition hover:bg-[#efe4d4]"
+                >
+                  +{preset}
+                </button>
+              ))}
+            </div>
 
             <Button type="submit" disabled={loading || !productId} className="h-12 text-base">
               {loading ? "Registrando..." : "Registrar entrada"}
@@ -279,14 +236,15 @@ export function AdminInventoryManager({
             {feedback ? <p className="text-sm text-black/60">{feedback}</p> : null}
           </form>
 
-          <div className="mt-5 rounded-[1.5rem] border border-black/6 bg-[#fffaf2] p-4">
+          <div className="mt-6 rounded-[1.5rem] border border-black/6 bg-[#fffaf2] p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-black">Itens que pedem acao agora</p>
+                <p className="text-sm font-semibold text-black">Itens criticos</p>
                 <p className="mt-1 text-sm text-black/55">Produtos com estoque baixo ou zerado.</p>
               </div>
               <span className="rounded-full bg-[#111111] px-3 py-1 text-xs text-white">{criticalProducts.length}</span>
             </div>
+
             <div className="mt-4 space-y-2">
               {criticalProducts.length > 0 ? criticalProducts.map((product) => (
                 <button
@@ -317,14 +275,13 @@ export function AdminInventoryManager({
         </section>
 
         <section className="min-w-0 rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div className="min-w-0 max-w-xl">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="min-w-0">
               <p className="text-sm uppercase tracking-[0.24em] text-black/45">Visao geral</p>
               <h2 className="text-2xl font-semibold leading-tight text-black">Produtos e situacao do estoque</h2>
             </div>
-            <div className="min-w-0 xl:w-[420px]">
-              <div className="flex flex-col gap-3 lg:flex-row">
-                <div className="flex min-w-0 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 py-3">
+            <div className="flex flex-col gap-3 lg:flex-row xl:w-[430px]">
+              <div className="flex min-w-0 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 py-3">
                 <Search size={16} className="text-black/40" />
                 <input
                   value={query}
@@ -343,7 +300,6 @@ export function AdminInventoryManager({
                 <option value="baixo">Estoque baixo</option>
                 <option value="esgotado">Sem estoque</option>
               </select>
-              </div>
             </div>
           </div>
 
@@ -364,41 +320,33 @@ export function AdminInventoryManager({
                       <p className="mt-1 text-sm text-black/55">
                         {product.category_name} | SKU {product.sku} | status {product.status}
                       </p>
-                      <div className="mt-3">
-                        <div className="h-2.5 overflow-hidden rounded-full bg-white">
-                          <div
-                            className={`h-full rounded-full ${product.quantity <= 0 ? "bg-[#c94b33]" : product.quantity <= 2 ? "bg-[#d6a14d]" : "bg-[#2f6a43]"}`}
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
+                      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white">
+                        <div
+                          className={`h-full rounded-full ${product.quantity <= 0 ? "bg-[#c94b33]" : product.quantity <= 2 ? "bg-[#d6a14d]" : "bg-[#2f6a43]"}`}
+                          style={{ width: `${percentage}%` }}
+                        />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-4 text-sm xl:min-w-[470px]">
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-[110px_110px_120px]">
                       <div>
-                        <p className="text-black/45">Quantidade</p>
-                        <p className="mt-1 text-lg font-semibold text-black">{product.quantity}</p>
-                      </div>
-                      <div>
-                        <p className="text-black/45">Venda</p>
-                        <p className="mt-1 text-lg font-semibold text-black">{money(Number(product.sale_price))}</p>
+                        <p className="text-sm text-black/45">Quantidade</p>
+                        <p className="mt-1 text-xl font-semibold text-black">{product.quantity}</p>
                       </div>
                       <div>
-                        <p className="text-black/45">Custo</p>
-                        <p className="mt-1 text-lg font-semibold text-black">{money(Number(product.cost_price))}</p>
+                        <p className="text-sm text-black/45">Status</p>
+                        <p className="mt-1 text-base font-semibold text-black capitalize">{product.status}</p>
                       </div>
-                      <div className="flex items-end">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setProductId(product.id);
-                            setQuantity("1");
-                          }}
-                          className="w-full rounded-2xl bg-[#111111] px-4 py-3 text-sm font-medium text-white transition hover:opacity-95"
-                        >
-                          Repor
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProductId(product.id);
+                          setQuantity("1");
+                        }}
+                        className="rounded-2xl bg-[#111111] px-4 py-3 text-sm font-medium text-white transition hover:opacity-95"
+                      >
+                        Repor
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -438,7 +386,7 @@ export function AdminInventoryManager({
                       <p className="font-semibold text-black">{product?.name ?? "Produto removido"}</p>
                     </div>
                     <p className="mt-1 text-sm text-black/55">
-                      {movement.reason || "Sem observacao"} {movement.reference_id ? `| ref. ${movement.reference_id}` : ""}
+                      {movement.reason || "Sem observacao"}
                     </p>
                   </div>
 
