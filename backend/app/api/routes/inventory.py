@@ -67,6 +67,8 @@ def register_inventory_entry(payload: InventoryEntryCreate, db: Session = Depend
         quantity=payload.quantity,
         reason=payload.reason,
         reference_id=payload.reference_id,
+        cost_price=payload.cost_price,
+        sale_price=payload.sale_price,
     )
     return InventoryProductRow(
         id=product.id,

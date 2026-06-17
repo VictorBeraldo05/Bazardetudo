@@ -23,12 +23,19 @@ class StockReservationService:
         quantity: int,
         reason: str | None = None,
         reference_id: str | None = None,
+        cost_price: Decimal | None = None,
+        sale_price: Decimal | None = None,
     ) -> Product:
         product = db.get(Product, product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Produto nao encontrado")
         if quantity <= 0:
             raise HTTPException(status_code=400, detail="Quantidade deve ser maior que zero")
+
+        if cost_price is not None:
+            product.cost_price = cost_price
+        if sale_price is not None:
+            product.sale_price = sale_price
 
         product.quantity += quantity
         if product.quantity > 0 and product.status in {"sold", "available"}:

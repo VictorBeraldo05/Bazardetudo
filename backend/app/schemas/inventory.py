@@ -11,6 +11,8 @@ class InventoryEntryCreate(BaseModel):
     quantity: int = Field(ge=1)
     reason: str | None = Field(default=None, max_length=300)
     reference_id: str | None = Field(default=None, max_length=80)
+    cost_price: Decimal | None = Field(default=None, ge=0)
+    sale_price: Decimal | None = Field(default=None, ge=0)
 
 
 class InventoryMovementRead(TimestampSchema):

@@ -1,9 +1,10 @@
 "use client";
 
-import { AlertTriangle, Boxes, PackageCheck, PackagePlus, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Boxes, PackageCheck, PackagePlus, Search, ShoppingBag, Warehouse } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { money } from "@/lib/utils";
 
 type InventoryProduct = {
   id: string;
@@ -52,7 +53,7 @@ function formatMovementLabel(type: string) {
 
 function stockBadge(quantity: number) {
   if (quantity <= 0) return { label: "Esgotado", className: "bg-[#f7d8d2] text-[#9d3d2d]" };
-  if (quantity <= 2) return { label: "Baixo", className: "bg-[#f8ecd3] text-[#8a6230]" };
+  if (quantity <= 2) return { label: "Poucas unidades", className: "bg-[#f8ecd3] text-[#8a6230]" };
   return { label: "Normal", className: "bg-[#dff2e4] text-[#2f6a43]" };
 }
 
@@ -68,6 +69,8 @@ export function AdminInventoryManager({
   const [statusFilter, setStatusFilter] = useState("todos");
   const [productId, setProductId] = useState(initialOverview?.products[0]?.id ?? "");
   const [quantity, setQuantity] = useState("1");
+  const [costPrice, setCostPrice] = useState("");
+  const [salePrice, setSalePrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(loadError);
 
@@ -76,8 +79,34 @@ export function AdminInventoryManager({
     [overview, productId]
   );
 
-  const criticalProducts = useMemo(
-    () => (overview?.products ?? []).filter((product) => product.quantity <= 2).slice(0, 6),
+  useEffect(() => {
+    if (!selectedProduct) {
+      setCostPrice("");
+      setSalePrice("");
+      return;
+    }
+
+    setCostPrice(String(Number(selectedProduct.cost_price)));
+    setSalePrice(String(Number(selectedProduct.sale_price)));
+  }, [selectedProduct]);
+
+  const recentProducts = useMemo(
+    () => [...(overview?.products ?? [])].slice(0, 6),
+    [overview]
+  );
+
+  const availableProductsCount = useMemo(
+    () => (overview?.products ?? []).filter((product) => product.status === "available" && product.quantity > 0).length,
+    [overview]
+  );
+
+  const soldProductsCount = useMemo(
+    () => (overview?.products ?? []).filter((product) => product.status === "sold" || product.quantity <= 0).length,
+    [overview]
+  );
+
+  const reservedProductsCount = useMemo(
+    () => (overview?.products ?? []).filter((product) => product.status === "reserved").length,
     [overview]
   );
 
@@ -93,9 +122,10 @@ export function AdminInventoryManager({
       const badge = stockBadge(product.quantity).label.toLowerCase();
       const matchesStatus =
         statusFilter === "todos" ||
-        (statusFilter === "baixo" && badge === "baixo") ||
-        (statusFilter === "esgotado" && badge === "esgotado") ||
-        (statusFilter === "normal" && badge === "normal");
+        (statusFilter === "available" && product.status === "available" && product.quantity > 0) ||
+        (statusFilter === "reserved" && product.status === "reserved") ||
+        (statusFilter === "sold" && (product.status === "sold" || product.quantity <= 0)) ||
+        (statusFilter === "few" && badge === "poucas unidades");
 
       return matchesQuery && matchesStatus;
     });
@@ -125,7 +155,9 @@ export function AdminInventoryManager({
         body: JSON.stringify({
           product_id: productId,
           quantity: Number(quantity),
-          reason: "Reposicao manual no painel"
+          reason: "Entrada manual por lote no painel",
+          cost_price: costPrice.length > 0 ? Number(costPrice) : undefined,
+          sale_price: salePrice.length > 0 ? Number(salePrice) : undefined
         })
       });
       const result = await response.json().catch(() => null);
@@ -150,9 +182,11 @@ export function AdminInventoryManager({
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
           { label: "Produtos cadastrados", value: stats?.total_products ?? 0, hint: "Itens no catalogo", icon: Boxes },
-          { label: "Unidades em estoque", value: stats?.total_units ?? 0, hint: "Soma disponivel", icon: PackageCheck },
-          { label: "Estoque baixo", value: stats?.low_stock_products ?? 0, hint: "Ate 2 unidades", icon: AlertTriangle },
-          { label: "Entradas registradas", value: stats?.entries_count ?? 0, hint: "Reposicoes ja lancadas", icon: PackagePlus }
+          { label: "Unidades na loja", value: stats?.total_units ?? 0, hint: "Volume fisico atual", icon: Warehouse },
+          { label: "Produtos disponiveis", value: availableProductsCount, hint: "Prontos para venda", icon: PackageCheck },
+          { label: "Produtos vendidos", value: soldProductsCount, hint: "Ja sairam da loja", icon: ShoppingBag },
+          { label: "Itens reservados", value: reservedProductsCount, hint: "Separados para cliente", icon: PackageCheck },
+          { label: "Entradas registradas", value: stats?.entries_count ?? 0, hint: "Historico de entradas", icon: PackagePlus }
         ].map((card) => {
           const Icon = card.icon;
           return (
@@ -174,9 +208,9 @@ export function AdminInventoryManager({
         <section className="min-w-0 rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
           <div className="space-y-1">
             <p className="text-sm uppercase tracking-[0.24em] text-black/45">Entrada rapida</p>
-            <h2 className="text-2xl font-semibold text-black">Registrar reposicao</h2>
+            <h2 className="text-2xl font-semibold text-black">Registrar entrada</h2>
             <p className="text-sm text-black/58">
-              Selecione o produto e informe quantas unidades chegaram.
+              Quando chegar mercadoria nova do lote, selecione o produto e some a quantidade recebida.
             </p>
           </div>
 
@@ -205,17 +239,47 @@ export function AdminInventoryManager({
                   </span>
                   <span className="text-sm text-black/55">estoque atual: {selectedProduct.quantity}</span>
                 </div>
+                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-black/45">Custo atual</p>
+                    <p className="mt-1 font-semibold text-black">{money(Number(selectedProduct.cost_price))}</p>
+                  </div>
+                  <div>
+                    <p className="text-black/45">Venda atual</p>
+                    <p className="mt-1 font-semibold text-black">{money(Number(selectedProduct.sale_price))}</p>
+                  </div>
+                </div>
               </div>
             ) : null}
 
-            <input
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={(event) => setQuantity(event.target.value)}
-              placeholder="Quantidade recebida"
-              className="w-full rounded-2xl border border-black/10 px-4 py-3"
-            />
+            <div className="grid gap-4 md:grid-cols-3">
+              <input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(event) => setQuantity(event.target.value)}
+                placeholder="Quantidade recebida"
+                className="w-full rounded-2xl border border-black/10 px-4 py-3"
+              />
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={costPrice}
+                onChange={(event) => setCostPrice(event.target.value)}
+                placeholder="Custo do lote"
+                className="w-full rounded-2xl border border-black/10 px-4 py-3"
+              />
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={salePrice}
+                onChange={(event) => setSalePrice(event.target.value)}
+                placeholder="Preco de venda"
+                className="w-full rounded-2xl border border-black/10 px-4 py-3"
+              />
+            </div>
 
             <div className="flex flex-wrap gap-2">
               {[1, 5, 10, 20].map((preset) => (
@@ -239,14 +303,14 @@ export function AdminInventoryManager({
           <div className="mt-6 rounded-[1.5rem] border border-black/6 bg-[#fffaf2] p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-black">Itens criticos</p>
-                <p className="mt-1 text-sm text-black/55">Produtos com estoque baixo ou zerado.</p>
+                <p className="text-sm font-semibold text-black">Ultimos produtos no sistema</p>
+                <p className="mt-1 text-sm text-black/55">Atalho rapido para selecionar um item e lancar nova entrada.</p>
               </div>
-              <span className="rounded-full bg-[#111111] px-3 py-1 text-xs text-white">{criticalProducts.length}</span>
+              <span className="rounded-full bg-[#111111] px-3 py-1 text-xs text-white">{recentProducts.length}</span>
             </div>
 
             <div className="mt-4 space-y-2">
-              {criticalProducts.length > 0 ? criticalProducts.map((product) => (
+              {recentProducts.length > 0 ? recentProducts.map((product) => (
                 <button
                   key={product.id}
                   type="button"
@@ -267,7 +331,7 @@ export function AdminInventoryManager({
                 </button>
               )) : (
                 <div className="rounded-[1.2rem] bg-white px-4 py-4 text-sm text-black/55">
-                  Nenhum item critico no momento.
+                  Nenhum produto carregado no momento.
                 </div>
               )}
             </div>
@@ -296,9 +360,10 @@ export function AdminInventoryManager({
                 className="rounded-2xl border border-black/10 px-4 py-3 text-sm lg:w-[180px]"
               >
                 <option value="todos">Todos</option>
-                <option value="normal">Estoque normal</option>
-                <option value="baixo">Estoque baixo</option>
-                <option value="esgotado">Sem estoque</option>
+                <option value="available">Disponiveis</option>
+                <option value="reserved">Reservados</option>
+                <option value="sold">Vendidos</option>
+                <option value="few">Poucas unidades</option>
               </select>
             </div>
           </div>
@@ -335,7 +400,9 @@ export function AdminInventoryManager({
                       </div>
                       <div>
                         <p className="text-sm text-black/45">Status</p>
-                        <p className="mt-1 text-base font-semibold text-black capitalize">{product.status}</p>
+                        <p className="mt-1 text-base font-semibold text-black capitalize">
+                          {product.status === "available" ? "Disponivel" : product.status === "reserved" ? "Reservado" : product.status === "sold" ? "Vendido" : product.status}
+                        </p>
                       </div>
                       <button
                         type="button"
