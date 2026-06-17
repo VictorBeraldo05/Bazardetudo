@@ -160,8 +160,8 @@ export function AdminInventoryManager({
         ))}
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <section className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
+      <div className="grid gap-6 2xl:grid-cols-[minmax(380px,0.86fr)_minmax(0,1.14fr)]">
+        <section className="min-w-0 rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
           <div className="space-y-1">
             <p className="text-sm uppercase tracking-[0.24em] text-black/45">Entrada manual</p>
             <h2 className="text-2xl font-semibold text-black">Registrar reposicao</h2>
@@ -214,32 +214,34 @@ export function AdminInventoryManager({
           </form>
         </section>
 
-        <section className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
+        <section className="min-w-0 rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="min-w-0 max-w-xl">
               <p className="text-sm uppercase tracking-[0.24em] text-black/45">Visao geral</p>
-              <h2 className="text-2xl font-semibold text-black">Produtos e situacao do estoque</h2>
+              <h2 className="text-2xl font-semibold leading-tight text-black">Produtos e situacao do estoque</h2>
             </div>
-            <div className="flex flex-col gap-3 md:flex-row">
-              <div className="flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 py-3">
+            <div className="min-w-0 xl:w-[420px]">
+              <div className="flex flex-col gap-3 lg:flex-row">
+                <div className="flex min-w-0 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 py-3">
                 <Search size={16} className="text-black/40" />
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Buscar por nome, SKU ou categoria"
-                  className="w-full border-0 bg-transparent text-sm outline-none md:w-64"
+                  className="w-full min-w-0 border-0 bg-transparent text-sm outline-none"
                 />
               </div>
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
-                className="rounded-2xl border border-black/10 px-4 py-3 text-sm"
+                className="rounded-2xl border border-black/10 px-4 py-3 text-sm lg:w-[180px]"
               >
                 <option value="todos">Todos</option>
                 <option value="normal">Estoque normal</option>
                 <option value="baixo">Estoque baixo</option>
                 <option value="esgotado">Sem estoque</option>
               </select>
+              </div>
             </div>
           </div>
 
@@ -261,7 +263,7 @@ export function AdminInventoryManager({
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 text-sm lg:min-w-[320px]">
+                    <div className="grid grid-cols-3 gap-4 text-sm lg:min-w-[320px] xl:min-w-[360px]">
                       <div>
                         <p className="text-black/45">Quantidade</p>
                         <p className="mt-1 text-lg font-semibold text-black">{product.quantity}</p>
