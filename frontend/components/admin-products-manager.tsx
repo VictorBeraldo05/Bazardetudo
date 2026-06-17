@@ -28,6 +28,37 @@ function createShortDescription(value: string) {
   return `${name} com visual atrativo, boa apresentacao na vitrine e destaque para venda imediata.`;
 }
 
+function normalizeValue(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9\s-]/g, " ")
+    .trim();
+}
+
+function createSku(name: string, categoryName: string) {
+  const cleanName = normalizeValue(name);
+  const cleanCategory = normalizeValue(categoryName);
+
+  if (!cleanName) {
+    return "";
+  }
+
+  const categoryCode = (cleanCategory.match(/[a-zA-Z0-9]/g)?.join("").slice(0, 3) || "CAT").toUpperCase();
+  const nameCode = cleanName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((word) => word.slice(0, 3).toUpperCase())
+    .join("");
+
+  const base = `${cleanCategory}-${cleanName}`.toUpperCase();
+  const hash =
+    base.split("").reduce((total, character, index) => total + character.charCodeAt(0) * (index + 1), 0) % 9000 + 1000;
+
+  return `${categoryCode}-${nameCode || "ITEM"}-${hash}`;
+}
+
 function FieldHelp({ label, help }: { label: string; help: string }) {
   return (
     <div className="space-y-1">
@@ -137,6 +168,7 @@ export function AdminProductsManager({
   const [filter, setFilter] = useState("todos");
   const [query, setQuery] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
+  const [skuTouched, setSkuTouched] = useState(false);
   const [descriptionTouched, setDescriptionTouched] = useState(false);
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const canSubmit = categories.length > 0 && hasRealCategoryIds(categories) && !loadError;
@@ -162,6 +194,7 @@ export function AdminProductsManager({
     setForm(EMPTY_FORM);
     setPreview(null);
     setSlugTouched(false);
+    setSkuTouched(false);
     setDescriptionTouched(false);
     setEditingId(null);
     if (fileInputRef.current) {
@@ -191,6 +224,10 @@ export function AdminProductsManager({
       const nextForm = { ...current, name: nextName };
       if (!slugTouched) {
         nextForm.slug = createSlug(nextName);
+      }
+      if (!skuTouched) {
+        const categoryName = categories.find((category) => category.id === current.categoryId)?.name ?? "";
+        nextForm.sku = createSku(nextName, categoryName);
       }
       if (!descriptionTouched) {
         nextForm.description = createShortDescription(nextName);
@@ -304,6 +341,7 @@ export function AdminProductsManager({
       });
       setPreview(result.images?.[0]?.image_url ?? null);
       setSlugTouched(true);
+      setSkuTouched(true);
       setDescriptionTouched(true);
       setEditingId(productId);
       if (fileInputRef.current) {
@@ -438,7 +476,15 @@ export function AdminProductsManager({
               name="category_id"
               required
               value={form.categoryId}
-              onChange={(event) => updateForm("categoryId", event.target.value)}
+              onChange={(event) => {
+                const nextCategoryId = event.target.value;
+                const categoryName = categories.find((category) => category.id === nextCategoryId)?.name ?? "";
+                setForm((current) => ({
+                  ...current,
+                  categoryId: nextCategoryId,
+                  sku: skuTouched ? current.sku : createSku(current.name, categoryName)
+                }));
+              }}
               className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3"
             >
               <option value="">Selecione</option>
@@ -460,12 +506,15 @@ export function AdminProductsManager({
             />
           </div>
           <div className="min-w-0 space-y-2">
-            <FieldHelp label="SKU" help="Codigo interno unico para controle da operacao." />
+            <FieldHelp label="SKU" help="Gerado automaticamente por categoria e nome, mas voce pode ajustar manualmente se quiser." />
             <input
               name="sku"
               required
               value={form.sku}
-              onChange={(event) => updateForm("sku", event.target.value)}
+              onChange={(event) => {
+                setSkuTouched(true);
+                updateForm("sku", event.target.value.toUpperCase());
+              }}
               placeholder="BDT-2001"
               className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3"
             />
