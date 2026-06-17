@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { ArrowDownUp, BadgeAlert, Boxes, PackagePlus, Search, TrendingUp, Warehouse } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { money } from "@/lib/utils";
@@ -70,7 +70,6 @@ export function AdminInventoryManager({
   const [productId, setProductId] = useState(initialOverview?.products[0]?.id ?? "");
   const [quantity, setQuantity] = useState("1");
   const [reason, setReason] = useState("");
-  const [referenceId, setReferenceId] = useState("");
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(loadError);
 
@@ -93,6 +92,26 @@ export function AdminInventoryManager({
       return matchesQuery && matchesStatus;
     });
   }, [overview, query, statusFilter]);
+
+  const selectedProduct = useMemo(
+    () => (overview?.products ?? []).find((product) => product.id === productId) ?? null,
+    [overview, productId]
+  );
+
+  const criticalProducts = useMemo(
+    () => (overview?.products ?? []).filter((product) => product.quantity <= 2).slice(0, 5),
+    [overview]
+  );
+
+  const stockValue = useMemo(
+    () => (overview?.products ?? []).reduce((total, product) => total + Number(product.cost_price) * product.quantity, 0),
+    [overview]
+  );
+
+  const salesPotential = useMemo(
+    () => (overview?.products ?? []).reduce((total, product) => total + Number(product.sale_price) * product.quantity, 0),
+    [overview]
+  );
 
   async function reloadOverview() {
     const response = await fetch("/api/admin/inventory", { cache: "no-store" });
@@ -118,8 +137,7 @@ export function AdminInventoryManager({
         body: JSON.stringify({
           product_id: productId,
           quantity: Number(quantity),
-          reason,
-          reference_id: referenceId || undefined
+          reason: reason || "Reposicao manual no painel"
         })
       });
       const result = await response.json().catch(() => null);
@@ -129,7 +147,6 @@ export function AdminInventoryManager({
 
       await reloadOverview();
       setReason("");
-      setReferenceId("");
       setQuantity("1");
       setFeedback("Entrada registrada com sucesso e estoque atualizado.");
     } catch (error) {
@@ -145,29 +162,42 @@ export function AdminInventoryManager({
     <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         {[
-          { label: "Produtos cadastrados", value: stats?.total_products ?? 0, hint: "Itens ativos no sistema" },
-          { label: "Unidades em estoque", value: stats?.total_units ?? 0, hint: "Soma total disponivel" },
-          { label: "Estoque baixo", value: stats?.low_stock_products ?? 0, hint: "Produtos com ate 2 unidades" },
-          { label: "Sem estoque", value: stats?.out_of_stock_products ?? 0, hint: "Itens zerados" },
-          { label: "Entradas registradas", value: stats?.entries_count ?? 0, hint: "Historico de reposicao" },
-          { label: "Saidas por venda", value: stats?.sales_count ?? 0, hint: "Baixas automaticas" }
-        ].map((card) => (
+          { label: "Produtos cadastrados", value: stats?.total_products ?? 0, hint: "Catalogo ativo", icon: Warehouse },
+          { label: "Unidades em estoque", value: stats?.total_units ?? 0, hint: "Disponivel agora", icon: Boxes },
+          { label: "Itens criticos", value: (stats?.low_stock_products ?? 0) + (stats?.out_of_stock_products ?? 0), hint: "Baixo ou zerado", icon: BadgeAlert },
+          { label: "Valor em custo", value: money(stockValue), hint: "Capital parado em estoque", icon: ArrowDownUp },
+          { label: "Potencial de venda", value: money(salesPotential), hint: "Receita se tudo vender", icon: TrendingUp },
+          { label: "Entradas registradas", value: stats?.entries_count ?? 0, hint: "Historico de reposicao", icon: PackagePlus }
+        ].map((card) => {
+          const Icon = card.icon;
+          return (
           <div key={card.label} className="rounded-[1.6rem] border border-black/5 bg-white p-5 shadow-card">
-            <p className="text-sm text-black/45">{card.label}</p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm text-black/45">{card.label}</p>
+              <div className="rounded-2xl bg-[#f4ede1] p-2 text-[#8b6743]">
+                <Icon size={16} />
+              </div>
+            </div>
             <p className="mt-3 text-3xl font-semibold text-black">{card.value}</p>
             <p className="mt-2 text-sm text-black/55">{card.hint}</p>
           </div>
-        ))}
+        )})}
       </section>
 
-      <div className="grid gap-6 2xl:grid-cols-[minmax(380px,0.86fr)_minmax(0,1.14fr)]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(360px,0.72fr)_minmax(0,1.28fr)]">
         <section className="min-w-0 rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
-          <div className="space-y-1">
-            <p className="text-sm uppercase tracking-[0.24em] text-black/45">Entrada manual</p>
-            <h2 className="text-2xl font-semibold text-black">Registrar reposicao</h2>
-            <p className="text-sm text-black/58">
-              Use esta area quando mercadorias novas chegarem para um produto ja cadastrado.
-            </p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-sm uppercase tracking-[0.24em] text-black/45">Entrada rapida</p>
+              <h2 className="text-2xl font-semibold text-black">Reposicao de estoque</h2>
+              <p className="text-sm text-black/58">
+                Selecione o item, informe a quantidade e confirme. Sem burocracia.
+              </p>
+            </div>
+            <div className="rounded-[1.25rem] bg-[#111111] px-4 py-3 text-white">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-white/55">Saidas por venda</p>
+              <p className="mt-1 text-2xl font-semibold">{stats?.sales_count ?? 0}</p>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="mt-5 grid gap-4">
@@ -183,7 +213,37 @@ export function AdminInventoryManager({
               ))}
             </select>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            {selectedProduct ? (
+              <div className="rounded-[1.5rem] bg-[#f6f1e8] p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-semibold text-black">{selectedProduct.name}</p>
+                    <p className="mt-1 text-sm text-black/55">
+                      {selectedProduct.category_name} | SKU {selectedProduct.sku}
+                    </p>
+                  </div>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${stockBadge(selectedProduct.quantity).className}`}>
+                    estoque atual {selectedProduct.quantity}
+                  </span>
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <p className="text-black/45">Venda</p>
+                    <p className="mt-1 font-semibold text-black">{money(Number(selectedProduct.sale_price))}</p>
+                  </div>
+                  <div>
+                    <p className="text-black/45">Custo</p>
+                    <p className="mt-1 font-semibold text-black">{money(Number(selectedProduct.cost_price))}</p>
+                  </div>
+                  <div>
+                    <p className="text-black/45">Status</p>
+                    <p className="mt-1 font-semibold capitalize text-black">{selectedProduct.status}</p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
               <input
                 type="number"
                 min="1"
@@ -192,26 +252,68 @@ export function AdminInventoryManager({
                 placeholder="Quantidade recebida"
                 className="rounded-2xl border border-black/10 px-4 py-3"
               />
-              <input
-                value={referenceId}
-                onChange={(event) => setReferenceId(event.target.value)}
-                placeholder="Referencia opcional (NF, lote, compra)"
-                className="rounded-2xl border border-black/10 px-4 py-3"
-              />
+              <div className="flex flex-wrap gap-2">
+                {[1, 5, 10, 20].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setQuantity(String(preset))}
+                    className="rounded-full border border-black/10 bg-[#f7f3ec] px-4 py-3 text-sm text-black transition hover:bg-[#efe4d4]"
+                  >
+                    +{preset}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <textarea
               value={reason}
               onChange={(event) => setReason(event.target.value)}
-              placeholder="Descreva a entrada: compra de reposicao, devolucao ao estoque, novo lote..."
-              className="min-h-28 rounded-2xl border border-black/10 px-4 py-3"
+              placeholder="Observacao opcional, se quiser registrar o motivo da reposicao."
+              className="min-h-20 rounded-2xl border border-black/10 px-4 py-3"
             />
 
-            <Button type="submit" disabled={loading || !productId}>
+            <Button type="submit" disabled={loading || !productId} className="h-12 text-base">
               {loading ? "Registrando..." : "Registrar entrada"}
             </Button>
             {feedback ? <p className="text-sm text-black/60">{feedback}</p> : null}
           </form>
+
+          <div className="mt-5 rounded-[1.5rem] border border-black/6 bg-[#fffaf2] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-black">Itens que pedem acao agora</p>
+                <p className="mt-1 text-sm text-black/55">Produtos com estoque baixo ou zerado.</p>
+              </div>
+              <span className="rounded-full bg-[#111111] px-3 py-1 text-xs text-white">{criticalProducts.length}</span>
+            </div>
+            <div className="mt-4 space-y-2">
+              {criticalProducts.length > 0 ? criticalProducts.map((product) => (
+                <button
+                  key={product.id}
+                  type="button"
+                  onClick={() => setProductId(product.id)}
+                  className={`flex w-full items-center justify-between rounded-[1.2rem] px-4 py-3 text-left transition ${
+                    productId === product.id ? "bg-[#111111] text-white" : "bg-white text-black hover:bg-[#f3ebde]"
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{product.name}</p>
+                    <p className={`mt-1 text-xs ${productId === product.id ? "text-white/60" : "text-black/50"}`}>
+                      estoque atual {product.quantity} | {product.sku}
+                    </p>
+                  </div>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${productId === product.id ? "bg-white text-black" : stockBadge(product.quantity).className}`}>
+                    {stockBadge(product.quantity).label}
+                  </span>
+                </button>
+              )) : (
+                <div className="rounded-[1.2rem] bg-white px-4 py-4 text-sm text-black/55">
+                  Nenhum item critico no momento.
+                </div>
+              )}
+            </div>
+          </div>
         </section>
 
         <section className="min-w-0 rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
@@ -248,10 +350,11 @@ export function AdminInventoryManager({
           <div className="mt-5 space-y-3">
             {filteredProducts.map((product) => {
               const badge = stockBadge(product.quantity);
+              const percentage = Math.min(100, Math.max(8, product.quantity * 10));
               return (
                 <div key={product.id} className="rounded-[1.5rem] bg-[#f7f3ec] p-4">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="min-w-0">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-semibold text-black">{product.name}</p>
                         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${badge.className}`}>{badge.label}</span>
@@ -261,9 +364,17 @@ export function AdminInventoryManager({
                       <p className="mt-1 text-sm text-black/55">
                         {product.category_name} | SKU {product.sku} | status {product.status}
                       </p>
+                      <div className="mt-3">
+                        <div className="h-2.5 overflow-hidden rounded-full bg-white">
+                          <div
+                            className={`h-full rounded-full ${product.quantity <= 0 ? "bg-[#c94b33]" : product.quantity <= 2 ? "bg-[#d6a14d]" : "bg-[#2f6a43]"}`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 text-sm lg:min-w-[320px] xl:min-w-[360px]">
+                    <div className="grid grid-cols-4 gap-4 text-sm xl:min-w-[470px]">
                       <div>
                         <p className="text-black/45">Quantidade</p>
                         <p className="mt-1 text-lg font-semibold text-black">{product.quantity}</p>
@@ -275,6 +386,18 @@ export function AdminInventoryManager({
                       <div>
                         <p className="text-black/45">Custo</p>
                         <p className="mt-1 text-lg font-semibold text-black">{money(Number(product.cost_price))}</p>
+                      </div>
+                      <div className="flex items-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProductId(product.id);
+                            setQuantity("1");
+                          }}
+                          className="w-full rounded-2xl bg-[#111111] px-4 py-3 text-sm font-medium text-white transition hover:opacity-95"
+                        >
+                          Repor
+                        </button>
                       </div>
                     </div>
                   </div>
