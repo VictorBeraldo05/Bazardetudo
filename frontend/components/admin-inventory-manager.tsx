@@ -1,7 +1,7 @@
 "use client";
 
 import { Boxes, PackageCheck, PackagePlus, Search, ShoppingBag, Warehouse } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { money } from "@/lib/utils";
@@ -67,17 +67,32 @@ export function AdminInventoryManager({
   const [overview, setOverview] = useState<InventoryOverview | null>(initialOverview);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
+  const [categoryFilter, setCategoryFilter] = useState("todas");
   const [productId, setProductId] = useState(initialOverview?.products[0]?.id ?? "");
+  const [entryProductQuery, setEntryProductQuery] = useState(initialOverview?.products[0]?.name ?? "");
+  const [entryPickerOpen, setEntryPickerOpen] = useState(false);
   const [quantity, setQuantity] = useState("1");
   const [costPrice, setCostPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(loadError);
+  const entryPickerRef = useRef<HTMLDivElement | null>(null);
 
   const selectedProduct = useMemo(
     () => (overview?.products ?? []).find((product) => product.id === productId) ?? null,
     [overview, productId]
   );
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!entryPickerRef.current?.contains(event.target as Node)) {
+        setEntryPickerOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!selectedProduct) {
@@ -88,10 +103,11 @@ export function AdminInventoryManager({
 
     setCostPrice(String(Number(selectedProduct.cost_price)));
     setSalePrice(String(Number(selectedProduct.sale_price)));
+    setEntryProductQuery(selectedProduct.name);
   }, [selectedProduct]);
 
-  const recentProducts = useMemo(
-    () => [...(overview?.products ?? [])].slice(0, 6),
+  const categoryOptions = useMemo(
+    () => Array.from(new Set((overview?.products ?? []).map((product) => product.category_name))).sort((a, b) => a.localeCompare(b)),
     [overview]
   );
 
@@ -119,6 +135,10 @@ export function AdminInventoryManager({
         product.sku.toLowerCase().includes(query.toLowerCase()) ||
         product.category_name.toLowerCase().includes(query.toLowerCase());
 
+      const matchesCategory =
+        categoryFilter === "todas" ||
+        product.category_name.toLowerCase() === categoryFilter.toLowerCase();
+
       const badge = stockBadge(product.quantity).label.toLowerCase();
       const matchesStatus =
         statusFilter === "todos" ||
@@ -127,9 +147,26 @@ export function AdminInventoryManager({
         (statusFilter === "sold" && (product.status === "sold" || product.quantity <= 0)) ||
         (statusFilter === "few" && badge === "poucas unidades");
 
-      return matchesQuery && matchesStatus;
+      return matchesQuery && matchesCategory && matchesStatus;
     });
-  }, [overview, query, statusFilter]);
+  }, [categoryFilter, overview, query, statusFilter]);
+
+  const entryProductResults = useMemo(() => {
+    const products = overview?.products ?? [];
+    const normalizedQuery = entryProductQuery.trim().toLowerCase();
+
+    return products.filter((product) => {
+      if (!normalizedQuery) {
+        return true;
+      }
+
+      return (
+        product.name.toLowerCase().includes(normalizedQuery) ||
+        product.sku.toLowerCase().includes(normalizedQuery) ||
+        product.category_name.toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [entryProductQuery, overview]);
 
   async function reloadOverview() {
     const response = await fetch("/api/admin/inventory", { cache: "no-store" });
@@ -167,6 +204,9 @@ export function AdminInventoryManager({
 
       await reloadOverview();
       setQuantity("1");
+      if (selectedProduct) {
+        setEntryProductQuery(selectedProduct.name);
+      }
       setFeedback("Entrada registrada com sucesso e estoque atualizado.");
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Nao foi possivel registrar a entrada.");
@@ -215,17 +255,51 @@ export function AdminInventoryManager({
           </div>
 
           <form onSubmit={handleSubmit} className="mt-5 grid gap-4">
-            <select
-              value={productId}
-              onChange={(event) => setProductId(event.target.value)}
-              className="w-full rounded-2xl border border-black/10 px-4 py-3"
-            >
-              {(overview?.products ?? []).map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.name} | {product.sku} | estoque atual: {product.quantity}
-                </option>
-              ))}
-            </select>
+            <div ref={entryPickerRef} className="relative">
+              <div className="flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 py-3">
+                <Search size={16} className="text-black/40" />
+                <input
+                  value={entryProductQuery}
+                  onFocus={() => setEntryPickerOpen(true)}
+                  onChange={(event) => {
+                    setEntryProductQuery(event.target.value);
+                    setEntryPickerOpen(true);
+                  }}
+                  placeholder="Pesquisar produto por nome, SKU ou categoria"
+                  className="w-full min-w-0 border-0 bg-transparent text-sm outline-none"
+                />
+              </div>
+
+              {entryPickerOpen ? (
+                <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-[1.25rem] border border-black/10 bg-white shadow-card">
+                  <div className="max-h-72 overflow-y-auto p-2">
+                    {entryProductResults.map((product) => (
+                      <button
+                        key={product.id}
+                        type="button"
+                        onClick={() => {
+                          setProductId(product.id);
+                          setEntryProductQuery(product.name);
+                          setEntryPickerOpen(false);
+                        }}
+                        className={`flex w-full flex-col items-start rounded-[1rem] px-3 py-3 text-left transition ${
+                          product.id === productId ? "bg-[#f6f1e8]" : "hover:bg-[#faf7f1]"
+                        }`}
+                      >
+                        <span className="font-medium text-black">{product.name}</span>
+                        <span className="mt-1 text-xs text-black/55">
+                          {product.category_name} | SKU {product.sku} | estoque atual: {product.quantity}
+                        </span>
+                      </button>
+                    ))}
+
+                    {entryProductResults.length === 0 ? (
+                      <div className="px-3 py-4 text-sm text-black/45">Nenhum produto encontrado para essa busca.</div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+            </div>
 
             {selectedProduct ? (
               <div className="rounded-[1.5rem] bg-[#f6f1e8] p-4">
@@ -299,43 +373,6 @@ export function AdminInventoryManager({
             </Button>
             {feedback ? <p className="text-sm text-black/60">{feedback}</p> : null}
           </form>
-
-          <div className="mt-6 rounded-[1.5rem] border border-black/6 bg-[#fffaf2] p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-black">Ultimos produtos no sistema</p>
-                <p className="mt-1 text-sm text-black/55">Atalho rapido para selecionar um item e lancar nova entrada.</p>
-              </div>
-              <span className="rounded-full bg-[#111111] px-3 py-1 text-xs text-white">{recentProducts.length}</span>
-            </div>
-
-            <div className="mt-4 space-y-2">
-              {recentProducts.length > 0 ? recentProducts.map((product) => (
-                <button
-                  key={product.id}
-                  type="button"
-                  onClick={() => setProductId(product.id)}
-                  className={`flex w-full items-center justify-between rounded-[1.2rem] px-4 py-3 text-left transition ${
-                    productId === product.id ? "bg-[#111111] text-white" : "bg-white text-black hover:bg-[#f3ebde]"
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{product.name}</p>
-                    <p className={`mt-1 text-xs ${productId === product.id ? "text-white/60" : "text-black/50"}`}>
-                      estoque atual {product.quantity} | {product.sku}
-                    </p>
-                  </div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${productId === product.id ? "bg-white text-black" : stockBadge(product.quantity).className}`}>
-                    {stockBadge(product.quantity).label}
-                  </span>
-                </button>
-              )) : (
-                <div className="rounded-[1.2rem] bg-white px-4 py-4 text-sm text-black/55">
-                  Nenhum produto carregado no momento.
-                </div>
-              )}
-            </div>
-          </div>
         </section>
 
         <section className="min-w-0 rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
@@ -344,7 +381,7 @@ export function AdminInventoryManager({
               <p className="text-sm uppercase tracking-[0.24em] text-black/45">Visao geral</p>
               <h2 className="text-2xl font-semibold leading-tight text-black">Produtos e situacao do estoque</h2>
             </div>
-            <div className="flex flex-col gap-3 lg:flex-row xl:w-[430px]">
+            <div className="flex flex-col gap-3 lg:flex-row xl:w-[620px]">
               <div className="flex min-w-0 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 py-3">
                 <Search size={16} className="text-black/40" />
                 <input
@@ -354,6 +391,18 @@ export function AdminInventoryManager({
                   className="w-full min-w-0 border-0 bg-transparent text-sm outline-none"
                 />
               </div>
+              <select
+                value={categoryFilter}
+                onChange={(event) => setCategoryFilter(event.target.value)}
+                className="rounded-2xl border border-black/10 px-4 py-3 text-sm lg:w-[200px]"
+              >
+                <option value="todas">Todas as categorias</option>
+                {categoryOptions.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
@@ -408,6 +457,8 @@ export function AdminInventoryManager({
                         type="button"
                         onClick={() => {
                           setProductId(product.id);
+                          setEntryProductQuery(product.name);
+                          setEntryPickerOpen(false);
                           setQuantity("1");
                         }}
                         className="rounded-2xl bg-[#111111] px-4 py-3 text-sm font-medium text-white transition hover:opacity-95"

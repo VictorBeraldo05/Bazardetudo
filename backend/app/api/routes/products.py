@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import admin_guard, db_session
 from app.models.catalog import Product, ProductImage
 from app.models.inventory import InventoryMovement
-from app.schemas.catalog import ProductCreate, ProductRead
+from app.schemas.catalog import ProductCreate, ProductRead, ProductUpdate
 from app.services.product_alerts import notify_matching_alerts
 
 
@@ -63,6 +63,50 @@ def create_product(payload: ProductCreate, db: Session = Depends(db_session)) ->
                 movement_type="entry",
                 quantity=product.quantity,
                 reason="Cadastro inicial do produto",
+                reference_id=product.id,
+            )
+        )
+
+    notify_matching_alerts(db, product)
+    db.commit()
+    db.refresh(product)
+    return product
+
+
+@router.put("/{product_id}", response_model=ProductRead, dependencies=[Depends(admin_guard)])
+def update_product(product_id: str, payload: ProductUpdate, db: Session = Depends(db_session)) -> Product:
+    product = db.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Produto nao encontrado")
+
+    previous_quantity = product.quantity
+
+    for field, value in payload.model_dump(exclude={"image_url", "image_alt_text"}).items():
+        setattr(product, field, value)
+
+    primary_image = min(product.images, key=lambda image: image.position, default=None)
+    if payload.image_url:
+        if primary_image:
+            primary_image.image_url = payload.image_url
+            primary_image.alt_text = payload.image_alt_text or product.name
+        else:
+            db.add(
+                ProductImage(
+                    product_id=product.id,
+                    image_url=payload.image_url,
+                    alt_text=payload.image_alt_text or product.name,
+                    position=0,
+                )
+            )
+
+    quantity_delta = product.quantity - previous_quantity
+    if quantity_delta != 0:
+        db.add(
+            InventoryMovement(
+                product_id=product.id,
+                movement_type="entry" if quantity_delta > 0 else "sale",
+                quantity=quantity_delta,
+                reason="Ajuste manual no cadastro do produto",
                 reference_id=product.id,
             )
         )
