@@ -4,7 +4,15 @@ from app.models.customer import Admin, Customer
 from app.models.finance import Coupon, FinancialTransaction, Payment
 from app.models.fulfillment import Delivery, Order, OrderItem, PickupOrder
 from app.models.inventory import InventoryMovement
-from app.models.notification import Notification, ProductArrivalAlert, WhatsAppCampaign, WhatsAppLog
+from app.models.notification import (
+    Notification,
+    ProductArrivalAlert,
+    WhatsAppCampaign,
+    WhatsAppDispatchJob,
+    WhatsAppGroup,
+    WhatsAppLog,
+    WhatsAppProductSendLog,
+)
 from app.models.settings import Setting
 
 __all__ = [
@@ -27,5 +35,8 @@ __all__ = [
     "ProductImage",
     "Setting",
     "WhatsAppCampaign",
+    "WhatsAppDispatchJob",
+    "WhatsAppGroup",
     "WhatsAppLog",
+    "WhatsAppProductSendLog",
 ]

@@ -7,6 +7,7 @@ from app.models.catalog import Product, ProductImage
 from app.models.inventory import InventoryMovement
 from app.schemas.catalog import ProductCreate, ProductRead, ProductUpdate
 from app.services.product_alerts import notify_matching_alerts
+from app.services.whatsapp_dispatch import enqueue_product_whatsapp_dispatch
 
 
 router = APIRouter()
@@ -68,6 +69,7 @@ def create_product(payload: ProductCreate, db: Session = Depends(db_session)) ->
         )
 
     notify_matching_alerts(db, product)
+    enqueue_product_whatsapp_dispatch(db, product.id)
     db.commit()
     db.refresh(product)
     return product

@@ -29,6 +29,13 @@ class Settings(BaseSettings):
     app_public_url: str | None = None
     heartbeat_enabled: bool = False
     heartbeat_interval_minutes: int = 10
+    storefront_public_url: str | None = None
+    whatsapp_instance_name: str | None = None
+    whatsapp_auto_send_products: bool = True
+    whatsapp_send_delay_ms: int = 5000
+    whatsapp_worker_poll_interval_seconds: int = 10
+    whatsapp_send_max_retries: int = 3
+    whatsapp_request_timeout_seconds: int = 30
 
     @field_validator("database_url", mode="before")
     @classmethod
@@ -61,19 +68,25 @@ class Settings(BaseSettings):
             return [item.strip() for item in normalized.split(",") if item.strip()]
         raise ValueError("Invalid BACKEND_CORS_ORIGINS value")
 
-    @field_validator("app_public_url", mode="before")
+    @field_validator("app_public_url", "storefront_public_url", mode="before")
     @classmethod
-    def normalize_app_public_url(cls, value: str | None) -> str | None:
+    def normalize_public_url(cls, value: str | None) -> str | None:
         if value is None:
             return None
         normalized = value.strip().rstrip("/")
         return normalized or None
 
-    @field_validator("heartbeat_interval_minutes")
+    @field_validator(
+        "heartbeat_interval_minutes",
+        "whatsapp_send_delay_ms",
+        "whatsapp_worker_poll_interval_seconds",
+        "whatsapp_send_max_retries",
+        "whatsapp_request_timeout_seconds",
+    )
     @classmethod
-    def validate_heartbeat_interval(cls, value: int) -> int:
+    def validate_positive_numbers(cls, value: int) -> int:
         if value < 1:
-            raise ValueError("HEARTBEAT_INTERVAL_MINUTES must be at least 1")
+            raise ValueError("Numeric settings must be at least 1")
         return value
 
 
