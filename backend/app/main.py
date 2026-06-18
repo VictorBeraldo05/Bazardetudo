@@ -9,6 +9,7 @@ from app.db.base import Base
 from app.db.session import SessionLocal, engine
 from app.models.catalog import Product
 from app.models.inventory import InventoryMovement
+from app.services.heartbeat import start_heartbeat, stop_heartbeat
 import app.models  # noqa: F401
 
 
@@ -37,6 +38,12 @@ def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_backward_compatible_columns()
     backfill_inventory_entries()
+    start_heartbeat()
+
+
+@app.on_event("shutdown")
+def on_shutdown() -> None:
+    stop_heartbeat()
 
 
 def ensure_backward_compatible_columns() -> None:

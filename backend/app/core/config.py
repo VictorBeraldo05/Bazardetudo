@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     smtp_from_email: str | None = None
     smtp_from_name: str = "Bazar de Tudo"
     smtp_use_tls: bool = True
+    app_public_url: str | None = None
+    heartbeat_enabled: bool = False
+    heartbeat_interval_minutes: int = 10
 
     @field_validator("database_url", mode="before")
     @classmethod
@@ -57,6 +60,21 @@ class Settings(BaseSettings):
                 return [str(item) for item in parsed]
             return [item.strip() for item in normalized.split(",") if item.strip()]
         raise ValueError("Invalid BACKEND_CORS_ORIGINS value")
+
+    @field_validator("app_public_url", mode="before")
+    @classmethod
+    def normalize_app_public_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().rstrip("/")
+        return normalized or None
+
+    @field_validator("heartbeat_interval_minutes")
+    @classmethod
+    def validate_heartbeat_interval(cls, value: int) -> int:
+        if value < 1:
+            raise ValueError("HEARTBEAT_INTERVAL_MINUTES must be at least 1")
+        return value
 
 
 @lru_cache

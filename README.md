@@ -65,5 +65,14 @@ npm run dev
 - Vercel: apontar a raiz para `frontend`
 - Supabase: aplicar [database/schema.sql](database/schema.sql) e [database/seeds.sql](database/seeds.sql)
 
-Mais detalhes em [docs/architecture.md](docs/architecture.md), [docs/deploy.md](docs/deploy.md) e [docs/erd.md](docs/erd.md).
+### Keepalive do Render
 
+- O backend possui heartbeat interno iniciado no startup da aplicaÃ§Ã£o.
+- Para ativar no Render, configure:
+  - `APP_PUBLIC_URL=https://bazardetudo.onrender.com`
+  - `HEARTBEAT_ENABLED=true`
+  - `HEARTBEAT_INTERVAL_MINUTES=10`
+- Quando ativo, a API faz um `GET` periÃ³dico em `APP_PUBLIC_URL/health`.
+- Importante: no plano gratuito isso ajuda a manter a instÃ¢ncia ativa enquanto ela estiver rodando, mas nÃ£o substitui totalmente um ping externo caso o serviÃ§o jÃ¡ tenha sido suspenso.
+
+Mais detalhes em [docs/architecture.md](docs/architecture.md), [docs/deploy.md](docs/deploy.md) e [docs/erd.md](docs/erd.md).
