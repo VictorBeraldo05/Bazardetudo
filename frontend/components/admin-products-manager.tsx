@@ -387,8 +387,8 @@ export function AdminProductsManager({
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_0.92fr]">
-      <form onSubmit={handleSubmit} className="grid gap-5 rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
+    <div className="grid items-start gap-6 xl:grid-cols-[1fr_0.92fr]">
+      <form onSubmit={handleSubmit} className="grid self-start gap-5 rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div className="space-y-1">
             <h2 className="text-2xl font-semibold text-black">{editingId ? "Editar produto" : "Novo produto"}</h2>
@@ -636,7 +636,7 @@ export function AdminProductsManager({
         {message ? <p className="text-sm text-black/60">{message}</p> : null}
       </form>
 
-      <section className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
+      <section className="self-start rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
