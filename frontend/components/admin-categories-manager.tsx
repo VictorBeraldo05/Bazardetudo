@@ -53,6 +53,8 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
     ...EMPTY_SUBCATEGORY_FORM,
     categoryId: initialCategories[0]?.id ?? ""
   });
+  const [categorySlugEdited, setCategorySlugEdited] = useState(false);
+  const [subcategorySlugEdited, setSubcategorySlugEdited] = useState(false);
 
   const totalSubcategories = useMemo(
     () => categories.reduce((total, category) => total + (category.subcategories?.length ?? 0), 0),
@@ -85,6 +87,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
   function resetCategoryForm() {
     setCategoryForm(EMPTY_CATEGORY_FORM);
     setEditingCategoryId(null);
+    setCategorySlugEdited(false);
   }
 
   function resetSubcategoryForm() {
@@ -93,6 +96,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       categoryId: categories[0]?.id ?? ""
     });
     setEditingSubcategoryId(null);
+    setSubcategorySlugEdited(false);
   }
 
   async function handleCategorySubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -224,7 +228,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                   setCategoryForm((current) => ({
                     ...current,
                     name: event.target.value,
-                    slug: current.slug ? current.slug : createSlug(event.target.value)
+                    slug: categorySlugEdited ? current.slug : createSlug(event.target.value)
                   }))
                 }
                 className="w-full rounded-2xl border border-black/10 px-4 py-3"
@@ -236,7 +240,10 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
               <p className="text-sm font-semibold text-black">Slug</p>
               <input
                 value={categoryForm.slug}
-                onChange={(event) => setCategoryForm((current) => ({ ...current, slug: createSlug(event.target.value) }))}
+                onChange={(event) => {
+                  setCategoryForm((current) => ({ ...current, slug: createSlug(event.target.value) }));
+                  setCategorySlugEdited(true);
+                }}
                 className="w-full rounded-2xl border border-black/10 px-4 py-3"
                 placeholder="decoracao"
                 required
@@ -289,7 +296,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                   setSubcategoryForm((current) => ({
                     ...current,
                     name: event.target.value,
-                    slug: current.slug ? current.slug : createSlug(event.target.value)
+                    slug: subcategorySlugEdited ? current.slug : createSlug(event.target.value)
                   }))
                 }
                 className="w-full rounded-2xl border border-black/10 px-4 py-3"
@@ -301,7 +308,10 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
               <p className="text-sm font-semibold text-black">Slug</p>
               <input
                 value={subcategoryForm.slug}
-                onChange={(event) => setSubcategoryForm((current) => ({ ...current, slug: createSlug(event.target.value) }))}
+                onChange={(event) => {
+                  setSubcategoryForm((current) => ({ ...current, slug: createSlug(event.target.value) }));
+                  setSubcategorySlugEdited(true);
+                }}
                 className="w-full rounded-2xl border border-black/10 px-4 py-3"
                 placeholder="espelhos"
                 required
@@ -355,6 +365,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                             slug: category.slug,
                             description: category.description ?? ""
                           });
+                          setCategorySlugEdited(true);
                         }}
                         className="font-medium text-black"
                       >
@@ -384,6 +395,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                             slug: subcategory.slug,
                             description: subcategory.description ?? ""
                           });
+                          setSubcategorySlugEdited(true);
                         }}
                         className="rounded-full border border-black/10 bg-white px-3 py-2 text-sm text-black transition hover:bg-[#f1ece3]"
                       >
