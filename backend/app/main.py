@@ -7,11 +7,84 @@ from app.api.router import api_router
 from app.core.config import settings
 from app.db.base import Base
 from app.db.session import SessionLocal, engine
-from app.models.catalog import Product
+from app.models.catalog import Category, Product, Subcategory
 from app.models.inventory import InventoryMovement
 from app.services.heartbeat import start_heartbeat, stop_heartbeat
 from app.services.whatsapp_dispatch import start_whatsapp_dispatch_worker, stop_whatsapp_dispatch_worker
 import app.models  # noqa: F401
+
+
+SUBCATEGORY_DEFAULTS = {
+    "decoracao": [
+        ("Espelhos", "espelhos"),
+        ("Tapetes", "tapetes"),
+        ("Iluminacao", "iluminacao"),
+        ("Quadros", "quadros"),
+        ("Organizacao", "organizacao"),
+        ("Sala", "sala"),
+    ],
+    "eletrodomesticos": [
+        ("Geladeiras", "geladeiras"),
+        ("Lavadoras", "lavadoras"),
+        ("Fornos e Micro-ondas", "fornos-microondas"),
+        ("Air Fryer", "air-fryer"),
+        ("Fogoes e Cooktops", "fogoes-cooktops"),
+        ("Pequenos Eletros", "pequenos-eletros"),
+    ],
+    "moveis": [
+        ("Sofas", "sofas"),
+        ("Camas", "camas"),
+        ("Mesas", "mesas"),
+        ("Poltronas", "poltronas"),
+        ("Armarios", "armarios"),
+        ("Aparadores e Racks", "aparadores-racks"),
+    ],
+    "material-escolar": [
+        ("Canetas", "canetas"),
+        ("Cadernos e Planners", "cadernos-planners"),
+        ("Mochilas e Estojos", "mochilas-estojos"),
+        ("Desenho e Pintura", "desenho-pintura"),
+        ("Escritorio", "escritorio"),
+    ],
+    "suplementos": [
+        ("Creatina", "creatina"),
+        ("Whey Protein", "whey-protein"),
+        ("Pre-treino", "pre-treino"),
+        ("Hipercaloricos", "hipercaloricos"),
+        ("Vitaminas", "vitaminas"),
+    ],
+}
+
+SUBCATEGORY_MATCHERS = {
+    "espelhos": ["espelho"],
+    "tapetes": ["tapete", "passadeira"],
+    "iluminacao": ["luminaria", "lustre", "abajur", "led"],
+    "quadros": ["quadro", "painel decorativo"],
+    "organizacao": ["organizador", "nicho", "prateleira", "cesto"],
+    "sala": ["sala", "centro", "lateral", "decorativo"],
+    "geladeiras": ["geladeira", "refrigerador", "frigobar", "freezer"],
+    "lavadoras": ["lavadora", "lava", "roupas", "tanquinho", "secadora"],
+    "fornos-microondas": ["forno", "micro", "micro-ondas", "microondas"],
+    "air-fryer": ["air fryer", "fritadeira"],
+    "fogoes-cooktops": ["fogao", "fogão", "cooktop"],
+    "pequenos-eletros": ["liquidificador", "cafeteira", "batedeira", "sanduicheira"],
+    "sofas": ["sofa", "sofá", "chaise", "retratil"],
+    "camas": ["cama", "colchao", "colchão", "box", "cabec"],
+    "mesas": ["mesa", "jantar", "escritorio", "escritório"],
+    "poltronas": ["poltrona", "cadeira", "puff"],
+    "armarios": ["armario", "armário", "guarda", "roupeiro", "closet"],
+    "aparadores-racks": ["aparador", "buffet", "rack", "painel"],
+    "canetas": ["caneta", "marker", "marca texto"],
+    "cadernos-planners": ["caderno", "agenda", "planner"],
+    "mochilas-estojos": ["mochila", "estojo", "lancheira"],
+    "desenho-pintura": ["lapis", "lápis", "giz", "pintura"],
+    "escritorio": ["grampeador", "papel", "bloco", "cola"],
+    "creatina": ["creatina"],
+    "whey-protein": ["whey", "protein"],
+    "pre-treino": ["pre treino", "pré treino"],
+    "hipercaloricos": ["hipercalorico", "hipercalórico", "mass"],
+    "vitaminas": ["vitamina", "multivitaminico"],
+}
 
 
 app = FastAPI(
@@ -38,6 +111,8 @@ def healthcheck() -> dict[str, str]:
 def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_backward_compatible_columns()
+    ensure_default_subcategories()
+    backfill_product_subcategories()
     backfill_inventory_entries()
     start_heartbeat()
     start_whatsapp_dispatch_worker()
@@ -59,6 +134,92 @@ def ensure_backward_compatible_columns() -> None:
 
         if inspector.has_table("product_images") and engine.dialect.name == "postgresql":
             connection.execute(text("ALTER TABLE product_images ALTER COLUMN image_url TYPE TEXT"))
+
+        if inspector.has_table("products"):
+            existing_columns = {column["name"] for column in inspector.get_columns("products")}
+            if "subcategory_id" not in existing_columns:
+                connection.execute(text("ALTER TABLE products ADD COLUMN subcategory_id UUID NULL"))
+                if engine.dialect.name == "postgresql":
+                    connection.execute(
+                        text("ALTER TABLE products ADD CONSTRAINT fk_products_subcategory_id FOREIGN KEY (subcategory_id) REFERENCES subcategories(id)")
+                    )
+                    connection.execute(text("CREATE INDEX IF NOT EXISTS idx_products_subcategory ON products(subcategory_id)"))
+
+
+def ensure_default_subcategories() -> None:
+    db: Session = SessionLocal()
+    try:
+        categories = list(db.scalars(select(Category)).all())
+        if not categories:
+            return
+
+        existing_by_slug = {sub.slug for sub in db.scalars(select(Subcategory)).all()}
+        created = False
+        for category in categories:
+            defaults = SUBCATEGORY_DEFAULTS.get(category.slug, [])
+            for sub_name, sub_slug in defaults:
+                if sub_slug in existing_by_slug:
+                    continue
+                db.add(
+                    Subcategory(
+                        category_id=category.id,
+                        name=sub_name,
+                        slug=sub_slug,
+                        description=f"Subcategoria de {category.name}",
+                    )
+                )
+                existing_by_slug.add(sub_slug)
+                created = True
+
+        if created:
+            db.commit()
+    finally:
+        db.close()
+
+
+def backfill_product_subcategories() -> None:
+    db: Session = SessionLocal()
+    try:
+        products = list(db.scalars(select(Product)).all())
+        if not products:
+            return
+
+        subcategories = list(db.scalars(select(Subcategory)).all())
+        if not subcategories:
+            return
+
+        sub_by_category: dict[str, list[Subcategory]] = {}
+        for subcategory in subcategories:
+            sub_by_category.setdefault(subcategory.category_id, []).append(subcategory)
+
+        updated = 0
+        for product in products:
+            if product.subcategory_id:
+                continue
+
+            available = sub_by_category.get(product.category_id, [])
+            if not available:
+                continue
+
+            haystack = f"{product.name} {product.description} {product.tags or ''}".lower()
+            matched = next(
+                (
+                    subcategory
+                    for subcategory in available
+                    if any(keyword in haystack for keyword in SUBCATEGORY_MATCHERS.get(subcategory.slug, []))
+                ),
+                None,
+            )
+            if not matched:
+                matched = available[0]
+
+            product.subcategory_id = matched.id
+            updated += 1
+
+        if updated:
+            db.commit()
+    finally:
+        db.close()
 
 
 def backfill_inventory_entries() -> None:

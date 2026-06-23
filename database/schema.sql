@@ -33,9 +33,20 @@ CREATE TABLE categories (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE subcategories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  category_id UUID NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  name VARCHAR(80) NOT NULL,
+  slug VARCHAR(80) NOT NULL UNIQUE,
+  description TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   category_id UUID NOT NULL REFERENCES categories(id),
+  subcategory_id UUID REFERENCES subcategories(id),
   name VARCHAR(160) NOT NULL,
   slug VARCHAR(180) NOT NULL UNIQUE,
   description TEXT NOT NULL,
@@ -56,6 +67,7 @@ CREATE TABLE products (
 
 CREATE INDEX idx_products_status ON products(status);
 CREATE INDEX idx_products_category ON products(category_id);
+CREATE INDEX idx_products_subcategory ON products(subcategory_id);
 
 CREATE TABLE product_images (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

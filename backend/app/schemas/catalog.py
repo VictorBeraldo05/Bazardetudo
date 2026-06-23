@@ -11,6 +11,17 @@ class CategoryRead(TimestampSchema):
     description: str | None = None
 
 
+class SubcategoryRead(TimestampSchema):
+    category_id: str
+    name: str
+    slug: str
+    description: str | None = None
+
+
+class CategoryWithSubcategoriesRead(CategoryRead):
+    subcategories: list[SubcategoryRead] = []
+
+
 class ProductImageRead(TimestampSchema):
     image_url: str
     alt_text: str | None = None
@@ -25,6 +36,7 @@ class ProductCreate(BaseModel):
     condition: str
     status: str = "available"
     category_id: str
+    subcategory_id: str | None = None
     sku: str
     cost_price: Decimal
     sale_price: Decimal
@@ -45,6 +57,7 @@ class ProductUpdate(BaseModel):
     condition: str
     status: str = "available"
     category_id: str
+    subcategory_id: str | None = None
     sku: str
     cost_price: Decimal
     sale_price: Decimal
@@ -65,6 +78,7 @@ class ProductRead(TimestampSchema):
     condition: str
     status: str
     category_id: str
+    subcategory_id: str | None = None
     sku: str
     cost_price: Decimal
     sale_price: Decimal

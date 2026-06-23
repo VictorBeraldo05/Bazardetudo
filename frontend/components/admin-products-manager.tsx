@@ -77,6 +77,7 @@ type ProductResponse = {
   condition: string;
   status: string;
   category_id: string;
+  subcategory_id?: string | null;
   sku: string;
   cost_price: string | number;
   sale_price: string | number;
@@ -100,6 +101,7 @@ type ProductFormState = {
   condition: string;
   status: string;
   categoryId: string;
+  subcategoryId: string;
   sku: string;
   costPrice: string;
   salePrice: string;
@@ -118,6 +120,7 @@ const EMPTY_FORM: ProductFormState = {
   condition: "Muito bom",
   status: "available",
   categoryId: "",
+  subcategoryId: "",
   sku: "",
   costPrice: "",
   salePrice: "",
@@ -129,11 +132,13 @@ const EMPTY_FORM: ProductFormState = {
 };
 
 function mapResultToProduct(result: ProductResponse, categories: Category[], fallbackImage?: string | null): Product {
+  const category = categories.find((item) => item.id === result.category_id);
   return {
     id: result.id,
     slug: result.slug,
     name: result.name,
-    category: categories.find((item) => item.id === result.category_id)?.name ?? "Catalogo",
+    category: category?.name ?? "Catalogo",
+    subcategory: category?.subcategories?.find((item) => item.id === result.subcategory_id)?.name ?? null,
     description: result.description,
     damageNotes: result.damage_notes,
     condition: result.condition,
@@ -173,13 +178,19 @@ export function AdminProductsManager({
   const [descriptionTouched, setDescriptionTouched] = useState(false);
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const canSubmit = categories.length > 0 && hasRealCategoryIds(categories) && !loadError;
+  const selectedCategory = useMemo(
+    () => categories.find((category) => category.id === form.categoryId) ?? null,
+    [categories, form.categoryId]
+  );
+  const currentSubcategories = selectedCategory?.subcategories ?? [];
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const matchesQuery =
         query.length === 0 ||
         product.name.toLowerCase().includes(query.toLowerCase()) ||
-        product.category.toLowerCase().includes(query.toLowerCase());
+        product.category.toLowerCase().includes(query.toLowerCase()) ||
+        (product.subcategory?.toLowerCase().includes(query.toLowerCase()) ?? false);
 
       const matchesFilter =
         filter === "todos" ||
@@ -271,6 +282,7 @@ export function AdminProductsManager({
       condition: form.condition,
       status: form.status || "available",
       category_id: form.categoryId,
+      subcategory_id: form.subcategoryId || null,
       sku: form.sku,
       cost_price: Number(form.costPrice || 0),
       sale_price: Number(form.salePrice || 0),
@@ -357,6 +369,7 @@ export function AdminProductsManager({
         condition: result.condition,
         status: result.status,
         categoryId: result.category_id,
+        subcategoryId: result.subcategory_id ?? "",
         sku: result.sku,
         costPrice: String(Number(result.cost_price)),
         salePrice: String(Number(result.sale_price)),
@@ -497,7 +510,7 @@ export function AdminProductsManager({
           />
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-4">
           <div className="min-w-0 space-y-2">
             <FieldHelp label="Categoria" help="Escolha onde esse produto deve aparecer no catalogo." />
             <select
@@ -510,6 +523,7 @@ export function AdminProductsManager({
                 setForm((current) => ({
                   ...current,
                   categoryId: nextCategoryId,
+                  subcategoryId: "",
                   sku: skuTouched ? current.sku : createSku(current.name, categoryName)
                 }));
               }}
@@ -519,6 +533,23 @@ export function AdminProductsManager({
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="min-w-0 space-y-2">
+            <FieldHelp label="Subcategoria" help="Organize melhor a navegacao do catalogo e a exibicao mobile." />
+            <select
+              name="subcategory_id"
+              value={form.subcategoryId}
+              onChange={(event) => updateForm("subcategoryId", event.target.value)}
+              disabled={!selectedCategory || currentSubcategories.length === 0}
+              className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3 disabled:bg-[#f7f5f1] disabled:text-black/35"
+            >
+              <option value="">{selectedCategory ? "Selecione" : "Escolha a categoria antes"}</option>
+              {currentSubcategories.map((subcategory) => (
+                <option key={subcategory.id} value={subcategory.id}>
+                  {subcategory.name}
                 </option>
               ))}
             </select>
@@ -701,7 +732,9 @@ export function AdminProductsManager({
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="font-semibold text-black">{product.name}</p>
-                      <p className="mt-1 text-sm text-black/50">{product.category}</p>
+                      <p className="mt-1 text-sm text-black/50">
+                        {product.category}{product.subcategory ? ` • ${product.subcategory}` : ""}
+                      </p>
                     </div>
                     <p className="font-semibold text-black">{money(product.price)}</p>
                   </div>

@@ -13,6 +13,23 @@ class Category(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     products: Mapped[list["Product"]] = relationship(back_populates="category")
+    subcategories: Mapped[list["Subcategory"]] = relationship(
+        back_populates="category",
+        cascade="all, delete-orphan",
+        order_by="Subcategory.name",
+    )
+
+
+class Subcategory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "subcategories"
+
+    category_id: Mapped[str] = mapped_column(ForeignKey("categories.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(80), index=True)
+    slug: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    category: Mapped["Category"] = relationship(back_populates="subcategories")
+    products: Mapped[list["Product"]] = relationship(back_populates="subcategory")
 
 
 class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -26,6 +43,7 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     condition: Mapped[str] = mapped_column(String(40), default="good")
     status: Mapped[str] = mapped_column(String(40), default="available", index=True)
     category_id: Mapped[str] = mapped_column(ForeignKey("categories.id"))
+    subcategory_id: Mapped[str | None] = mapped_column(ForeignKey("subcategories.id"), nullable=True, index=True)
     sku: Mapped[str] = mapped_column(String(40), unique=True, index=True)
     cost_price: Mapped[float] = mapped_column(Numeric(10, 2))
     sale_price: Mapped[float] = mapped_column(Numeric(10, 2))
@@ -36,6 +54,7 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     is_offer: Mapped[bool] = mapped_column(default=False)
 
     category: Mapped["Category"] = relationship(back_populates="products")
+    subcategory: Mapped["Subcategory | None"] = relationship(back_populates="products")
     images: Mapped[list["ProductImage"]] = relationship(back_populates="product", cascade="all, delete-orphan")
 
 

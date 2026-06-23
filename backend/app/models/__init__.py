@@ -1,5 +1,5 @@
 from app.models.cart import Cart, CartItem
-from app.models.catalog import Category, Product, ProductImage
+from app.models.catalog import Category, Product, ProductImage, Subcategory
 from app.models.customer import Admin, Customer
 from app.models.finance import Coupon, FinancialTransaction, Payment
 from app.models.fulfillment import Delivery, Order, OrderItem, PickupOrder
@@ -34,6 +34,7 @@ __all__ = [
     "ProductArrivalAlert",
     "ProductImage",
     "Setting",
+    "Subcategory",
     "WhatsAppCampaign",
     "WhatsAppDispatchJob",
     "WhatsAppGroup",

@@ -5,6 +5,13 @@ export type Category = {
   name: string;
   slug: string;
   description?: string | null;
+  subcategories?: Array<{
+    id: string;
+    category_id: string;
+    name: string;
+    slug: string;
+    description?: string | null;
+  }>;
 };
 
 export type ApiProduct = {
@@ -16,6 +23,7 @@ export type ApiProduct = {
   condition: string;
   status: "available" | "reserved" | "awaiting_payment" | "sold";
   category_id: string;
+  subcategory_id?: string | null;
   cost_price: string;
   sale_price: string;
   compare_at_price?: string | null;
@@ -88,7 +96,7 @@ export async function getCategories(): Promise<Category[]> {
   try {
     return await requestJson<Category[]>("/categories");
   } catch {
-    return fallbackCategories.map((name, index) => ({ id: String(index), name, slug: name.toLowerCase() }));
+    return fallbackCategories.map((name, index) => ({ id: String(index), name, slug: name.toLowerCase(), subcategories: [] }));
   }
 }
 
@@ -97,7 +105,9 @@ export async function getCategoriesStrict(): Promise<Category[]> {
 }
 
 export function mapApiProduct(product: ApiProduct, categories: Category[]): Product {
-  const category = categories.find((item) => item.id === product.category_id)?.name ?? "Catalogo";
+  const categoryData = categories.find((item) => item.id === product.category_id);
+  const category = categoryData?.name ?? "Catalogo";
+  const subcategory = categoryData?.subcategories?.find((item) => item.id === product.subcategory_id)?.name ?? null;
   const primaryImage = product.images?.[0]?.image_url;
 
   return {
@@ -105,6 +115,7 @@ export function mapApiProduct(product: ApiProduct, categories: Category[]): Prod
     slug: product.slug,
     name: product.name,
     category,
+    subcategory,
     description: product.description,
     damageNotes: product.damage_notes,
     condition: product.condition,

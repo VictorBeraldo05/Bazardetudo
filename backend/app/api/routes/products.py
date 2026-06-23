@@ -14,10 +14,17 @@ router = APIRouter()
 
 
 @router.get("", response_model=list[ProductRead])
-def list_products(db: Session = Depends(db_session), category_id: str | None = None, status: str | None = None) -> list[Product]:
+def list_products(
+    db: Session = Depends(db_session),
+    category_id: str | None = None,
+    subcategory_id: str | None = None,
+    status: str | None = None,
+) -> list[Product]:
     stmt = select(Product).order_by(Product.created_at.desc())
     if category_id:
         stmt = stmt.where(Product.category_id == category_id)
+    if subcategory_id:
+        stmt = stmt.where(Product.subcategory_id == subcategory_id)
     if status:
         stmt = stmt.where(Product.status == status)
     return list(db.scalars(stmt).unique().all())

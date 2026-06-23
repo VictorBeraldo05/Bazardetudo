@@ -9,69 +9,6 @@ import type { Category } from "@/lib/api";
 import type { Product } from "@/lib/data";
 import { money } from "@/lib/utils";
 
-type SubcategoryEntry = {
-  id: string;
-  label: string;
-  image: string;
-  count: number;
-  matches: (product: Product) => boolean;
-};
-
-type CategoryShelf = {
-  name: string;
-  slug: string;
-  subcategories: SubcategoryEntry[];
-};
-
-const CATEGORY_BLUEPRINTS: Record<string, Array<{ label: string; keywords: string[] }>> = {
-  moveis: [
-    { label: "Sofas", keywords: ["sofa", "sofá", "chaise", "retratil"] },
-    { label: "Camas", keywords: ["cama", "colchao", "colchão", "box", "cabec"] },
-    { label: "Mesas", keywords: ["mesa", "jantar", "escritorio", "escritório"] },
-    { label: "Poltronas", keywords: ["poltrona", "cadeira", "puff"] },
-    { label: "Armarios", keywords: ["armario", "armário", "guarda", "roupeiro", "closet"] },
-    { label: "Aparadores", keywords: ["aparador", "buffet", "rack", "painel"] }
-  ],
-  eletrodomesticos: [
-    { label: "Geladeiras", keywords: ["geladeira", "refrigerador", "frigobar", "freezer"] },
-    { label: "Lavadoras", keywords: ["lavadora", "lava", "roupas", "tanquinho", "secadora"] },
-    { label: "Fornos", keywords: ["forno", "micro", "micro-ondas", "microondas"] },
-    { label: "Air Fryer", keywords: ["air fryer", "fritadeira"] },
-    { label: "Fogoes", keywords: ["fogao", "fogão", "cooktop"] },
-    { label: "Pequenos", keywords: ["liquidificador", "cafeteira", "batedeira", "sanduicheira"] }
-  ],
-  decoracao: [
-    { label: "Espelhos", keywords: ["espelho"] },
-    { label: "Tapetes", keywords: ["tapete", "passadeira"] },
-    { label: "Iluminacao", keywords: ["luminaria", "lustre", "abajur", "led"] },
-    { label: "Quadros", keywords: ["quadro", "painel decorativo"] },
-    { label: "Organizacao", keywords: ["organizador", "nicho", "prateleira", "cesto"] },
-    { label: "Sala", keywords: ["sala", "centro", "lateral", "decorativo"] }
-  ],
-  utilidades: [
-    { label: "Cozinha", keywords: ["cozinha", "panela", "talher", "pote", "garrafa"] },
-    { label: "Banheiro", keywords: ["banheiro", "toalha", "suporte", "saboneteira"] },
-    { label: "Limpeza", keywords: ["limpeza", "vassoura", "balde", "mop"] },
-    { label: "Organizadores", keywords: ["organizador", "caixa", "cesto", "gaveta"] },
-    { label: "Mesa posta", keywords: ["prato", "xicara", "xícara", "jogo americano"] },
-    { label: "Termicos", keywords: ["termica", "térmica", "garrafa", "copo"] }
-  ],
-  materiaiscolar: [
-    { label: "Canetas", keywords: ["caneta", "marca texto", "marker"] },
-    { label: "Cadernos", keywords: ["caderno", "agenda", "planner"] },
-    { label: "Mochilas", keywords: ["mochila", "estojo", "lancheira"] },
-    { label: "Desenho", keywords: ["lapis", "lápis", "giz", "pintura"] },
-    { label: "Escritorio", keywords: ["grampeador", "papel", "bloco", "cola"] }
-  ],
-  suplementos: [
-    { label: "Creatina", keywords: ["creatina"] },
-    { label: "Whey", keywords: ["whey", "protein"] },
-    { label: "Pre treino", keywords: ["pre treino", "pré treino"] },
-    { label: "Hipercaloricos", keywords: ["hipercalorico", "hipercalórico", "mass"] },
-    { label: "Vitaminas", keywords: ["vitamina", "multivitaminico"] }
-  ]
-};
-
 function normalizeText(value: string) {
   return value
     .normalize("NFD")
@@ -79,84 +16,27 @@ function normalizeText(value: string) {
     .toLowerCase();
 }
 
-function toSlug(value: string) {
-  return normalizeText(value).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-}
-
-function titleFromProduct(product: Product) {
-  const base = product.name.split(/[|,-]/)[0]?.trim() || product.name.trim();
-  return base.length > 22 ? `${base.slice(0, 22).trim()}...` : base;
-}
-
-function uniqueById<T extends { id: string }>(items: T[]) {
-  return Array.from(new Map(items.map((item) => [item.id, item])).values());
-}
-
-function buildSubcategories(categoryName: string, products: Product[]): SubcategoryEntry[] {
-  const normalizedCategory = toSlug(categoryName).replace(/-/g, "");
-  const blueprints = CATEGORY_BLUEPRINTS[normalizedCategory] ?? [];
-  const productMatches = products.map((product) => ({
-    product,
-    text: normalizeText(`${product.name} ${product.description} ${product.tags.join(" ")} ${product.category}`)
-  }));
-
-  const curated = blueprints
-    .map((entry) => {
-      const matches = productMatches.filter(({ text }) => entry.keywords.some((keyword) => text.includes(normalizeText(keyword))));
-      if (matches.length === 0) {
-        return null;
-      }
-      const first = matches[0]?.product;
-      return {
-        id: `${normalizedCategory}-${toSlug(entry.label)}`,
-        label: entry.label,
-        image: first?.image ?? products[0]?.image ?? "",
-        count: matches.length,
-        matches: (product: Product) =>
-          entry.keywords.some((keyword) =>
-            normalizeText(`${product.name} ${product.description} ${product.tags.join(" ")} ${product.category}`).includes(normalizeText(keyword))
-          )
-      } satisfies SubcategoryEntry;
-    })
-    .filter((item): item is SubcategoryEntry => Boolean(item));
-
-  const fallback = products.slice(0, 8).map((product) => ({
-    id: `${normalizedCategory}-${product.id}`,
-    label: titleFromProduct(product),
-    image: product.image,
-    count: 1,
-    matches: (candidate: Product) => candidate.id === product.id
-  }));
-
-  const tagged = uniqueById(
-    products
-      .flatMap((product) =>
-        product.tags.slice(0, 2).map((tag) => ({
-          id: `${normalizedCategory}-tag-${toSlug(tag)}`,
-          label: tag,
-          image: product.image,
-          count: products.filter((item) => item.tags.some((candidateTag) => normalizeText(candidateTag) === normalizeText(tag))).length,
-          matches: (candidate: Product) => candidate.tags.some((candidateTag) => normalizeText(candidateTag) === normalizeText(tag))
-        }))
-      )
-      .filter((entry) => entry.label.length > 2)
-  );
-
-  return uniqueById([...curated, ...tagged, ...fallback]).slice(0, 12);
-}
-
 function matchInitialCategory(categories: Category[], initialFilter?: string) {
   if (!initialFilter) {
-    return categories[0]?.name ?? "Todos";
+    return categories[0]?.id ?? "";
   }
 
-  const initial = normalizeText(initialFilter);
-  const categoryMatch = categories.find((category) => normalizeText(category.name) === initial);
-  if (categoryMatch) {
-    return categoryMatch.name;
-  }
+  const target = normalizeText(initialFilter);
+  return categories.find((category) => normalizeText(category.name) === target)?.id ?? categories[0]?.id ?? "";
+}
 
-  return categories[0]?.name ?? "Todos";
+function pickSubcategoryImage(products: Product[], categoryName: string, subcategoryName?: string | null) {
+  const match = products.find((product) => {
+    const categoryMatch = normalizeText(product.category) === normalizeText(categoryName);
+    const subcategoryMatch = subcategoryName ? normalizeText(product.subcategory ?? "") === normalizeText(subcategoryName) : true;
+    return categoryMatch && subcategoryMatch;
+  });
+
+  return (
+    match?.image ??
+    products.find((product) => normalizeText(product.category) === normalizeText(categoryName))?.image ??
+    "https://images.unsplash.com/photo-1484101403633-562f891dc89a?auto=format&fit=crop&w=1200&q=80"
+  );
 }
 
 export function CatalogClient({
@@ -168,34 +48,42 @@ export function CatalogClient({
   products: Product[];
   initialFilter?: string;
 }) {
-  const categoryShelves = useMemo<CategoryShelf[]>(() => {
-    const realCategories = categories.length > 0 ? categories : [];
-    return realCategories.map((category) => {
-      const categoryProducts = products.filter((product) => normalizeText(product.category) === normalizeText(category.name));
-      return {
-        name: category.name,
-        slug: category.slug,
-        subcategories: buildSubcategories(category.name, categoryProducts)
-      };
-    });
-  }, [categories, products]);
-
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("Todos");
   const [priceRange, setPriceRange] = useState("Todos");
-  const [activeCategory, setActiveCategory] = useState(matchInitialCategory(categories, initialFilter));
+  const [activeCategoryId, setActiveCategoryId] = useState(matchInitialCategory(categories, initialFilter));
   const [activeSubcategoryId, setActiveSubcategoryId] = useState("all");
 
   useEffect(() => {
-    setActiveCategory(matchInitialCategory(categories, initialFilter));
+    setActiveCategoryId(matchInitialCategory(categories, initialFilter));
     setActiveSubcategoryId("all");
   }, [categories, initialFilter]);
 
-  const activeShelf = useMemo(() => {
-    return categoryShelves.find((shelf) => shelf.name === activeCategory) ?? categoryShelves[0];
-  }, [activeCategory, categoryShelves]);
+  const activeCategory = useMemo(
+    () => categories.find((category) => category.id === activeCategoryId) ?? categories[0] ?? null,
+    [activeCategoryId, categories]
+  );
 
-  const activeSubcategory = activeShelf?.subcategories.find((entry) => entry.id === activeSubcategoryId) ?? null;
+  const activeSubcategory = useMemo(
+    () => activeCategory?.subcategories?.find((subcategory) => subcategory.id === activeSubcategoryId) ?? null,
+    [activeCategory, activeSubcategoryId]
+  );
+
+  const subcategoryTiles = useMemo(() => {
+    if (!activeCategory) {
+      return [];
+    }
+
+    return (activeCategory.subcategories ?? []).map((subcategory) => ({
+      ...subcategory,
+      image: pickSubcategoryImage(products, activeCategory.name, subcategory.name),
+      count: products.filter(
+        (product) =>
+          normalizeText(product.category) === normalizeText(activeCategory.name) &&
+          normalizeText(product.subcategory ?? "") === normalizeText(subcategory.name)
+      ).length
+    }));
+  }, [activeCategory, products]);
 
   const priceOptions = [
     { label: "Todos os precos", value: "Todos" },
@@ -203,68 +91,78 @@ export function CatalogClient({
     { label: `${money(500)} a ${money(1500)}`, value: "500-1500" },
     { label: `Acima de ${money(1500)}`, value: "1500+" }
   ];
-
   const statusOptions = ["Todos", "Available", "Reserved", "Sold"];
 
   const filtered = useMemo(() => {
     return products.filter((product) => {
-      const textMatch =
+      const matchesText =
         search.length === 0 ||
         normalizeText(product.name).includes(normalizeText(search)) ||
         normalizeText(product.description).includes(normalizeText(search)) ||
-        normalizeText(product.category).includes(normalizeText(search));
+        normalizeText(product.category).includes(normalizeText(search)) ||
+        normalizeText(product.subcategory ?? "").includes(normalizeText(search));
 
-      const categoryMatch = activeCategory === "Todos" || normalizeText(product.category) === normalizeText(activeCategory);
-      const subcategoryMatch = !activeSubcategory || activeSubcategory.matches(product);
-      const statusMatch = status === "Todos" || product.status === status.toLowerCase();
-      const priceMatch =
+      const matchesCategory =
+        !activeCategory || normalizeText(product.category) === normalizeText(activeCategory.name);
+
+      const matchesSubcategory =
+        !activeSubcategory || normalizeText(product.subcategory ?? "") === normalizeText(activeSubcategory.name);
+
+      const matchesStatus = status === "Todos" || product.status === status.toLowerCase();
+
+      const matchesPrice =
         priceRange === "Todos" ||
         (priceRange === "ate-500" && product.price <= 500) ||
         (priceRange === "500-1500" && product.price > 500 && product.price <= 1500) ||
         (priceRange === "1500+" && product.price > 1500);
 
-      return textMatch && categoryMatch && subcategoryMatch && statusMatch && priceMatch;
+      return matchesText && matchesCategory && matchesSubcategory && matchesStatus && matchesPrice;
     });
   }, [activeCategory, activeSubcategory, priceRange, products, search, status]);
 
   return (
-    <section className="space-y-5 md:space-y-7">
-      <div className="lg:hidden">
-        <div className="overflow-hidden rounded-[1.7rem] border border-black/6 bg-white shadow-card">
-          <div className="grid grid-cols-[108px_minmax(0,1fr)]">
-            <aside className="border-r border-black/6 bg-[#f6f3ed]">
-              {categoryShelves.map((shelf) => {
-                const isActive = shelf.name === activeCategory;
+    <section className="space-y-4 md:space-y-6">
+      <div className="grid gap-4 lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[270px_minmax(0,1fr)]">
+        <aside className="overflow-hidden rounded-[1.6rem] border border-black/6 bg-white shadow-card">
+          <div className="border-b border-black/6 px-4 py-3 md:px-5 md:py-4">
+            <p className="text-[10px] uppercase tracking-[0.24em] text-black/35 md:text-xs">Categorias</p>
+            <h2 className="mt-1 text-lg font-semibold text-black md:text-2xl">Navegacao</h2>
+          </div>
+
+          <div className="grid grid-cols-[110px_minmax(0,1fr)] lg:block">
+            <div className="border-r border-black/6 bg-[#f7f4ee] lg:border-r-0">
+              {categories.map((category) => {
+                const isActive = category.id === activeCategory?.id;
                 return (
                   <button
-                    key={shelf.name}
+                    key={category.id}
                     type="button"
                     onClick={() => {
-                      setActiveCategory(shelf.name);
+                      setActiveCategoryId(category.id);
                       setActiveSubcategoryId("all");
                     }}
-                    className={`relative flex min-h-20 w-full items-center border-b border-black/6 px-3 py-4 text-left text-[15px] leading-5 ${
-                      isActive ? "bg-white font-semibold text-[#2a6cdf]" : "text-black/78"
+                    className={`relative flex min-h-[84px] w-full items-center border-b border-black/6 px-3 py-3 text-left text-[14px] leading-5 lg:min-h-[74px] lg:px-5 ${
+                      isActive ? "bg-white font-semibold text-[#2f6ce5]" : "text-black/76"
                     }`}
                   >
-                    {isActive ? <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[#2a6cdf]" /> : null}
-                    <span className="pl-2">{shelf.name}</span>
+                    {isActive ? <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[#2f6ce5]" /> : null}
+                    <span className="pl-2 lg:pl-0">{category.name}</span>
                   </button>
                 );
               })}
-            </aside>
+            </div>
 
-            <div className="space-y-4 p-4">
+            <div className="p-3 lg:hidden">
               <div className="space-y-3">
-                <div className="flex h-11 overflow-hidden rounded-[1rem] border border-black/10 bg-white">
-                  <div className="flex w-11 items-center justify-center text-black/45">
-                    <Search size={16} />
+                <div className="flex h-10 overflow-hidden rounded-[1rem] border border-black/10 bg-white">
+                  <div className="flex w-10 items-center justify-center text-black/45">
+                    <Search size={15} />
                   </div>
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder={`Buscar em ${activeShelf?.name ?? "catalogo"}`}
-                    className="flex-1 border-0 bg-transparent pr-4 text-[15px] text-black outline-none"
+                    placeholder={`Buscar em ${activeCategory?.name ?? "catalogo"}`}
+                    className="flex-1 border-0 bg-transparent pr-3 text-[14px] text-black outline-none"
                   />
                 </div>
 
@@ -272,7 +170,7 @@ export function CatalogClient({
                   <select
                     value={priceRange}
                     onChange={(event) => setPriceRange(event.target.value)}
-                    className="h-10 rounded-2xl border border-black/10 bg-[#fbfaf7] px-3 text-sm text-black outline-none"
+                    className="h-10 rounded-2xl border border-black/10 bg-white px-3 text-[13px] text-black outline-none"
                   >
                     {priceOptions.map((item) => (
                       <option key={item.value} value={item.value}>
@@ -284,7 +182,7 @@ export function CatalogClient({
                   <select
                     value={status}
                     onChange={(event) => setStatus(event.target.value)}
-                    className="h-10 rounded-2xl border border-black/10 bg-[#fbfaf7] px-3 text-sm text-black outline-none"
+                    className="h-10 rounded-2xl border border-black/10 bg-white px-3 text-[13px] text-black outline-none"
                   >
                     {statusOptions.map((item) => (
                       <option key={item} value={item}>
@@ -293,106 +191,68 @@ export function CatalogClient({
                     ))}
                   </select>
                 </div>
-              </div>
 
-              <div>
-                <p className="text-lg font-semibold text-black">{activeShelf?.name ?? "Categoria"}</p>
-                <p className="mt-1 text-sm text-black/52">
-                  Escolha uma area da vitrine para ir direto aos itens.
-                </p>
-              </div>
+                <div>
+                  <h3 className="text-base font-semibold text-black">{activeCategory?.name ?? "Categoria"}</h3>
+                  <p className="mt-1 text-[13px] leading-5 text-black/52">Subcategorias para navegar mais rapido.</p>
+                </div>
 
-              <div className="grid grid-cols-3 gap-x-3 gap-y-5">
-                <button
-                  type="button"
-                  onClick={() => setActiveSubcategoryId("all")}
-                  className={`text-center ${activeSubcategoryId === "all" ? "text-[#2a6cdf]" : "text-black"}`}
-                >
-                  <div className={`mx-auto flex h-[4.55rem] w-[4.55rem] items-center justify-center rounded-full border ${
-                    activeSubcategoryId === "all" ? "border-[#2a6cdf] bg-[#eef4ff]" : "border-black/8 bg-[#f7f5f0]"
-                  }`}>
-                    <span className="text-xs font-semibold uppercase tracking-[0.18em]">Tudo</span>
-                  </div>
-                  <p className="mt-2 text-[12px] font-medium leading-4">Ver tudo</p>
-                </button>
+                <div className="grid grid-cols-3 gap-x-2 gap-y-4">
+                  <button
+                    type="button"
+                    onClick={() => setActiveSubcategoryId("all")}
+                    className={`text-center ${activeSubcategoryId === "all" ? "text-[#2f6ce5]" : "text-black"}`}
+                  >
+                    <div className={`mx-auto flex h-[4rem] w-[4rem] items-center justify-center rounded-full border ${
+                      activeSubcategoryId === "all" ? "border-[#2f6ce5] bg-[#eef4ff]" : "border-black/8 bg-[#f6f4ef]"
+                    }`}>
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">Tudo</span>
+                    </div>
+                    <p className="mt-2 text-[11px] font-medium leading-4">Ver tudo</p>
+                  </button>
 
-                {activeShelf?.subcategories.map((entry) => {
-                  const isActive = activeSubcategoryId === entry.id;
-                  return (
-                    <button
-                      key={entry.id}
-                      type="button"
-                      onClick={() => setActiveSubcategoryId(entry.id)}
-                      className={`text-center ${isActive ? "text-[#2a6cdf]" : "text-black"}`}
-                    >
-                      <div className={`relative mx-auto h-[4.55rem] w-[4.55rem] overflow-hidden rounded-full border ${
-                        isActive ? "border-[#2a6cdf]" : "border-black/8"
-                      } bg-[#f4f1ea]`}>
-                        <Image src={entry.image} alt={entry.label} fill className="object-cover" />
-                      </div>
-                      <p className="mt-2 line-clamp-2 text-[12px] font-medium leading-4">{entry.label}</p>
-                    </button>
-                  );
-                })}
+                  {subcategoryTiles.map((subcategory) => {
+                    const isActive = activeSubcategoryId === subcategory.id;
+                    return (
+                      <button
+                        key={subcategory.id}
+                        type="button"
+                        onClick={() => setActiveSubcategoryId(subcategory.id)}
+                        className={`text-center ${isActive ? "text-[#2f6ce5]" : "text-black"}`}
+                      >
+                        <div className={`relative mx-auto h-[4rem] w-[4rem] overflow-hidden rounded-full border ${
+                          isActive ? "border-[#2f6ce5]" : "border-black/8"
+                        } bg-[#f4f1ea]`}>
+                          <Image src={subcategory.image} alt={subcategory.name} fill className="object-cover" />
+                        </div>
+                        <p className="mt-2 line-clamp-2 text-[11px] font-medium leading-4">{subcategory.name}</p>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="hidden gap-6 lg:grid lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="overflow-hidden rounded-[2rem] border border-black/6 bg-white shadow-card">
-          <div className="border-b border-black/6 px-5 py-5">
-            <p className="text-[11px] uppercase tracking-[0.28em] text-black/38">Navegacao</p>
-            <h2 className="mt-2 text-2xl font-semibold text-black">Categorias</h2>
-          </div>
-
-          <div className="bg-[#f7f3ed]">
-            {categoryShelves.map((shelf) => {
-              const isActive = shelf.name === activeCategory;
-              return (
-                <button
-                  key={shelf.name}
-                  type="button"
-                  onClick={() => {
-                    setActiveCategory(shelf.name);
-                    setActiveSubcategoryId("all");
-                  }}
-                  className={`relative flex min-h-20 w-full items-center border-b border-black/6 px-5 text-left ${
-                    isActive ? "bg-white text-black" : "text-black/70"
-                  }`}
-                >
-                  {isActive ? <span className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full bg-[#ba8652]" /> : null}
-                  <div className="space-y-1">
-                    <p className={`text-base ${isActive ? "font-semibold" : "font-medium"}`}>{shelf.name}</p>
-                    <p className="text-sm text-black/45">{shelf.subcategories.length} atalhos</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
         </aside>
 
-        <div className="space-y-5">
-          <div className="rounded-[2rem] border border-black/6 bg-white p-6 shadow-card">
+        <div className="hidden space-y-4 lg:block">
+          <div className="rounded-[1.8rem] border border-black/6 bg-white p-5 shadow-card">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.28em] text-black/38">Catalogo guiado</p>
-                <h2 className="mt-2 text-3xl font-semibold text-black">{activeShelf?.name ?? "Catalogo"}</h2>
-                <p className="mt-2 max-w-2xl text-sm text-black/55">
-                  Navegue pelas subcategorias primeiro e depois refine a listagem final dos produtos.
-                </p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-black/35">Subcategorias</p>
+                <h2 className="mt-1 text-3xl font-semibold text-black">{activeCategory?.name ?? "Catalogo"}</h2>
+                <p className="mt-2 text-sm text-black/56">Escolha uma area principal e depois refine a listagem dos produtos.</p>
               </div>
 
               <div className="grid gap-3 md:grid-cols-[minmax(220px,1fr)_auto_auto]">
-                <div className="flex h-11 overflow-hidden rounded-[1rem] border border-black/10 bg-[#fbfaf7]">
+                <div className="flex h-11 overflow-hidden rounded-[1rem] border border-black/10 bg-white">
                   <div className="flex w-11 items-center justify-center text-black/45">
                     <Search size={16} />
                   </div>
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Buscar por produto, categoria ou estilo"
+                    placeholder="Buscar no catalogo"
                     className="flex-1 border-0 bg-transparent pr-4 text-sm text-black outline-none"
                   />
                 </div>
@@ -400,7 +260,7 @@ export function CatalogClient({
                 <select
                   value={priceRange}
                   onChange={(event) => setPriceRange(event.target.value)}
-                  className="h-11 rounded-2xl border border-black/10 bg-[#fbfaf7] px-4 text-sm text-black outline-none"
+                  className="h-11 rounded-2xl border border-black/10 bg-white px-4 text-sm text-black outline-none"
                 >
                   {priceOptions.map((item) => (
                     <option key={item.value} value={item.value}>
@@ -412,7 +272,7 @@ export function CatalogClient({
                 <select
                   value={status}
                   onChange={(event) => setStatus(event.target.value)}
-                  className="h-11 rounded-2xl border border-black/10 bg-[#fbfaf7] px-4 text-sm text-black outline-none"
+                  className="h-11 rounded-2xl border border-black/10 bg-white px-4 text-sm text-black outline-none"
                 >
                   {statusOptions.map((item) => (
                     <option key={item} value={item}>
@@ -423,40 +283,40 @@ export function CatalogClient({
               </div>
             </div>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <button
                 type="button"
                 onClick={() => setActiveSubcategoryId("all")}
-                className={`flex items-center gap-4 rounded-[1.45rem] border p-4 text-left transition ${
-                  activeSubcategoryId === "all" ? "border-[#ba8652] bg-[#fbf5ed]" : "border-black/8 bg-white"
+                className={`flex items-center gap-3 rounded-[1.25rem] border p-3 text-left ${
+                  activeSubcategoryId === "all" ? "border-[#b4885a] bg-[#faf5ee]" : "border-black/8 bg-white"
                 }`}
               >
-                <div className="flex h-[4.2rem] w-[4.2rem] flex-shrink-0 items-center justify-center rounded-full bg-[#f2ece3]">
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-black/62">Tudo</span>
+                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-[#f2ece2]">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">Tudo</span>
                 </div>
                 <div>
-                  <p className="font-semibold text-black">Visao geral</p>
-                  <p className="text-sm text-black/48">Todos os itens dessa categoria</p>
+                  <p className="font-semibold text-black">Todos os itens</p>
+                  <p className="text-sm text-black/45">Visao geral</p>
                 </div>
               </button>
 
-              {activeShelf?.subcategories.map((entry) => {
-                const isActive = activeSubcategoryId === entry.id;
+              {subcategoryTiles.map((subcategory) => {
+                const isActive = activeSubcategoryId === subcategory.id;
                 return (
                   <button
-                    key={entry.id}
+                    key={subcategory.id}
                     type="button"
-                    onClick={() => setActiveSubcategoryId(entry.id)}
-                    className={`flex items-center gap-4 rounded-[1.45rem] border p-4 text-left transition ${
-                      isActive ? "border-[#ba8652] bg-[#fbf5ed]" : "border-black/8 bg-white"
+                    onClick={() => setActiveSubcategoryId(subcategory.id)}
+                    className={`flex items-center gap-3 rounded-[1.25rem] border p-3 text-left ${
+                      isActive ? "border-[#b4885a] bg-[#faf5ee]" : "border-black/8 bg-white"
                     }`}
                   >
-                    <div className="relative h-[4.2rem] w-[4.2rem] flex-shrink-0 overflow-hidden rounded-full bg-[#f4f1ea]">
-                      <Image src={entry.image} alt={entry.label} fill className="object-cover" />
+                    <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-[#f4f1ea]">
+                      <Image src={subcategory.image} alt={subcategory.name} fill className="object-cover" />
                     </div>
                     <div className="min-w-0">
-                      <p className="line-clamp-2 font-semibold text-black">{entry.label}</p>
-                      <p className="mt-1 text-sm text-black/48">{entry.count} item(ns)</p>
+                      <p className="line-clamp-2 font-semibold text-black">{subcategory.name}</p>
+                      <p className="text-sm text-black/45">{subcategory.count} item(ns)</p>
                     </div>
                   </button>
                 );
@@ -466,15 +326,15 @@ export function CatalogClient({
         </div>
       </div>
 
-      <div className="rounded-[1.7rem] border border-black/6 bg-white p-4 shadow-card md:rounded-[2rem] md:p-6">
+      <div className="rounded-[1.55rem] border border-black/6 bg-white p-4 shadow-card md:rounded-[2rem] md:p-6">
         <div className="mb-5 flex items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-black/38">Resultados</p>
-            <h2 className="mt-2 text-2xl font-semibold text-black md:text-3xl">
-              {activeSubcategory ? activeSubcategory.label : activeShelf?.name ?? "Catalogo"}
+            <p className="text-[10px] uppercase tracking-[0.24em] text-black/35 md:text-xs">Resultados</p>
+            <h2 className="mt-1 text-xl font-semibold text-black md:text-3xl">
+              {activeSubcategory?.name ?? activeCategory?.name ?? "Catalogo"}
             </h2>
-            <p className="mt-1 text-sm text-black/52">
-              {filtered.length} item(ns) encontrados{activeShelf ? ` em ${activeShelf.name}` : ""}.
+            <p className="mt-1 text-[13px] text-black/54 md:text-sm">
+              {filtered.length} item(ns){activeCategory ? ` em ${activeCategory.name}` : ""}.
             </p>
           </div>
         </div>
@@ -486,7 +346,7 @@ export function CatalogClient({
         </div>
 
         {filtered.length === 0 ? (
-          <div className="mt-5 rounded-[1.35rem] border border-dashed border-black/10 bg-[#fcfaf7] px-4 py-10 text-center text-sm text-black/48">
+          <div className="mt-4 rounded-[1.2rem] border border-dashed border-black/10 bg-[#fcfaf7] px-4 py-8 text-center text-sm text-black/48">
             Nenhum produto encontrado com os filtros atuais.
           </div>
         ) : null}
