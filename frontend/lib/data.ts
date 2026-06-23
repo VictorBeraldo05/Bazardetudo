@@ -3,7 +3,9 @@ export type Product = {
   slug: string;
   name: string;
   category: string;
+  categorySlug?: string | null;
   subcategory?: string | null;
+  subcategorySlug?: string | null;
   description: string;
   damageNotes: string;
   condition: string;
@@ -22,6 +24,7 @@ export const products: Product[] = [
     slug: "buffet-aparador-oslo",
     name: "Buffet Aparador Oslo",
     category: "Decoracao",
+    categorySlug: "decoracao",
     description: "Buffet premium com desenho limpo, acabamento fosco e proporcao ideal para salas elegantes.",
     damageNotes: "Pequeno risco lateral discreto, sem impacto estrutural.",
     condition: "Excelente",
@@ -38,6 +41,7 @@ export const products: Product[] = [
     slug: "air-fryer-glass-pro-5l",
     name: "Air Fryer Glass Pro 5L",
     category: "Eletrodomesticos",
+    categorySlug: "eletrodomesticos",
     description: "Modelo touch com cuba em vidro, visual moderno e alta praticidade para a rotina.",
     damageNotes: "Caixa avariada e marca leve no puxador.",
     condition: "Muito bom",
@@ -53,6 +57,7 @@ export const products: Product[] = [
     slug: "poltrona-linho-areia",
     name: "Poltrona Linho Areia",
     category: "Moveis",
+    categorySlug: "moveis",
     description: "Poltrona de leitura com tecido neutro e design contemporaneo.",
     damageNotes: "Pequena mancha na base traseira.",
     condition: "Bom",

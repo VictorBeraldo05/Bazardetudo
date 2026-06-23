@@ -1,10 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-
-import { ProductCard } from "@/components/product-card";
 import type { Category } from "@/lib/api";
 import type { Product } from "@/lib/data";
 import { money } from "@/lib/utils";
@@ -93,7 +92,7 @@ export function CatalogClient({
   ];
   const statusOptions = ["Todos", "Available", "Reserved", "Sold"];
 
-  const filtered = useMemo(() => {
+  const filteredCount = useMemo(() => {
     return products.filter((product) => {
       const matchesText =
         search.length === 0 ||
@@ -102,23 +101,17 @@ export function CatalogClient({
         normalizeText(product.category).includes(normalizeText(search)) ||
         normalizeText(product.subcategory ?? "").includes(normalizeText(search));
 
-      const matchesCategory =
-        !activeCategory || normalizeText(product.category) === normalizeText(activeCategory.name);
-
-      const matchesSubcategory =
-        !activeSubcategory || normalizeText(product.subcategory ?? "") === normalizeText(activeSubcategory.name);
-
+      const matchesCategory = !activeCategory || normalizeText(product.category) === normalizeText(activeCategory.name);
       const matchesStatus = status === "Todos" || product.status === status.toLowerCase();
-
       const matchesPrice =
         priceRange === "Todos" ||
         (priceRange === "ate-500" && product.price <= 500) ||
         (priceRange === "500-1500" && product.price > 500 && product.price <= 1500) ||
         (priceRange === "1500+" && product.price > 1500);
 
-      return matchesText && matchesCategory && matchesSubcategory && matchesStatus && matchesPrice;
-    });
-  }, [activeCategory, activeSubcategory, priceRange, products, search, status]);
+      return matchesText && matchesCategory && matchesStatus && matchesPrice;
+    }).length;
+  }, [activeCategory, priceRange, products, search, status]);
 
   return (
     <section className="space-y-4 md:space-y-6">
@@ -167,7 +160,7 @@ export function CatalogClient({
                   <p className="text-[9px] uppercase tracking-[0.22em] text-black/35">Subcategorias</p>
                   <h2 className="mt-1 truncate text-[18px] font-semibold leading-tight text-black">{activeCategory?.name ?? "Catalogo"}</h2>
                 </div>
-                <p className="pt-1 text-[10px] text-black/45">{filtered.length} itens</p>
+                <p className="pt-1 text-[10px] text-black/45">{filteredCount} itens</p>
               </div>
 
               <div className="mt-3 grid grid-cols-2 gap-2">
@@ -197,9 +190,8 @@ export function CatalogClient({
               </div>
 
               <div className="-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1">
-                <button
-                  type="button"
-                  onClick={() => setActiveSubcategoryId("all")}
+                <Link
+                  href={activeCategory ? `/catalogo/categoria/${activeCategory.slug}` : "/catalogo"}
                   className="w-[72px] flex-shrink-0 text-center"
                 >
                   <div className={`mx-auto flex h-[3.5rem] w-[3.5rem] items-center justify-center rounded-full border ${
@@ -210,15 +202,14 @@ export function CatalogClient({
                   <p className={`mt-1.5 line-clamp-2 text-[10px] font-medium leading-3 ${activeSubcategoryId === "all" ? "text-[#2f6ce5]" : "text-black"}`}>
                     Ver tudo
                   </p>
-                </button>
+                </Link>
 
                 {subcategoryTiles.map((subcategory) => {
                   const isActive = activeSubcategoryId === subcategory.id;
                   return (
-                    <button
+                    <Link
                       key={subcategory.id}
-                      type="button"
-                      onClick={() => setActiveSubcategoryId(subcategory.id)}
+                      href={`/catalogo/subcategoria/${subcategory.slug}`}
                       className="w-[72px] flex-shrink-0 text-center"
                     >
                       <div className={`relative mx-auto h-[3.5rem] w-[3.5rem] overflow-hidden rounded-full border ${
@@ -229,7 +220,7 @@ export function CatalogClient({
                       <p className={`mt-1.5 line-clamp-2 text-[10px] font-medium leading-3 ${isActive ? "text-[#2f6ce5]" : "text-black"}`}>
                         {subcategory.name}
                       </p>
-                    </button>
+                    </Link>
                   );
                 })}
               </div>
@@ -317,9 +308,8 @@ export function CatalogClient({
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <button
-                type="button"
-                onClick={() => setActiveSubcategoryId("all")}
+              <Link
+                href={activeCategory ? `/catalogo/categoria/${activeCategory.slug}` : "/catalogo"}
                 className={`flex items-center gap-3 rounded-[1.25rem] border p-3 text-left ${
                   activeSubcategoryId === "all" ? "border-[#b4885a] bg-[#faf5ee]" : "border-black/8 bg-white"
                 }`}
@@ -331,15 +321,14 @@ export function CatalogClient({
                   <p className="font-semibold text-black">Todos os itens</p>
                   <p className="text-sm text-black/45">Visao geral</p>
                 </div>
-              </button>
+              </Link>
 
               {subcategoryTiles.map((subcategory) => {
                 const isActive = activeSubcategoryId === subcategory.id;
                 return (
-                  <button
+                  <Link
                     key={subcategory.id}
-                    type="button"
-                    onClick={() => setActiveSubcategoryId(subcategory.id)}
+                    href={`/catalogo/subcategoria/${subcategory.slug}`}
                     className={`flex items-center gap-3 rounded-[1.25rem] border p-3 text-left ${
                       isActive ? "border-[#b4885a] bg-[#faf5ee]" : "border-black/8 bg-white"
                     }`}
@@ -351,38 +340,12 @@ export function CatalogClient({
                       <p className="line-clamp-2 font-semibold text-black">{subcategory.name}</p>
                       <p className="text-sm text-black/45">{subcategory.count} item(ns)</p>
                     </div>
-                  </button>
+                  </Link>
                 );
               })}
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="rounded-[1.55rem] border border-black/6 bg-white p-4 shadow-card md:rounded-[2rem] md:p-6">
-        <div className="mb-5 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.24em] text-black/35 md:text-xs">Resultados</p>
-            <h2 className="mt-1 text-xl font-semibold text-black md:text-3xl">
-              {activeSubcategory?.name ?? activeCategory?.name ?? "Catalogo"}
-            </h2>
-            <p className="mt-1 text-[13px] text-black/54 md:text-sm">
-              {filtered.length} item(ns){activeCategory ? ` em ${activeCategory.name}` : ""}.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
-          {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-
-        {filtered.length === 0 ? (
-          <div className="mt-4 rounded-[1.2rem] border border-dashed border-black/10 bg-[#fcfaf7] px-4 py-8 text-center text-sm text-black/48">
-            Nenhum produto encontrado com os filtros atuais.
-          </div>
-        ) : null}
       </div>
     </section>
   );

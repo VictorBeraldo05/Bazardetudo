@@ -107,7 +107,8 @@ export async function getCategoriesStrict(): Promise<Category[]> {
 export function mapApiProduct(product: ApiProduct, categories: Category[]): Product {
   const categoryData = categories.find((item) => item.id === product.category_id);
   const category = categoryData?.name ?? "Catalogo";
-  const subcategory = categoryData?.subcategories?.find((item) => item.id === product.subcategory_id)?.name ?? null;
+  const subcategoryData = categoryData?.subcategories?.find((item) => item.id === product.subcategory_id) ?? null;
+  const subcategory = subcategoryData?.name ?? null;
   const primaryImage = product.images?.[0]?.image_url;
 
   return {
@@ -115,7 +116,9 @@ export function mapApiProduct(product: ApiProduct, categories: Category[]): Prod
     slug: product.slug,
     name: product.name,
     category,
+    categorySlug: categoryData?.slug ?? null,
     subcategory,
+    subcategorySlug: subcategoryData?.slug ?? null,
     description: product.description,
     damageNotes: product.damage_notes,
     condition: product.condition,
