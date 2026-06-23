@@ -98,6 +98,7 @@ def create_subcategory(category_id: str, payload: SubcategoryCreate, db: Session
         name=payload.name,
         slug=payload.slug,
         description=payload.description,
+        image=getattr(payload, "image", None),
     )
     db.add(subcategory)
     db.commit()
@@ -128,6 +129,7 @@ def update_subcategory(subcategory_id: str, payload: SubcategoryUpdate, db: Sess
     subcategory.name = payload.name
     subcategory.slug = payload.slug
     subcategory.description = payload.description
+    subcategory.image = getattr(payload, "image", None)
     db.commit()
     db.refresh(subcategory)
     return subcategory

@@ -28,12 +28,14 @@ class SubcategoryRead(TimestampSchema):
     name: str
     slug: str
     description: str | None = None
+    image: str | None = None
 
 
 class SubcategoryCreate(BaseModel):
     name: str
     slug: str
     description: str | None = None
+    image: str | None = None
 
 
 class SubcategoryUpdate(BaseModel):
@@ -41,6 +43,7 @@ class SubcategoryUpdate(BaseModel):
     name: str
     slug: str
     description: str | None = None
+    image: str | None = None
 
 
 class CategoryWithSubcategoriesRead(CategoryRead):

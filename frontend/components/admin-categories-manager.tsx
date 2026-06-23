@@ -15,6 +15,18 @@ function createSlug(value: string) {
     .replace(/-{2,}/g, "-");
 }
 
+function formatApiError(result: any): string {
+  if (!result) return "";
+  if (typeof result === "string") return result;
+  if (Array.isArray(result)) return result.map((r) => (typeof r === "string" ? r : JSON.stringify(r))).join("; ");
+  if (typeof result === "object") {
+    if (result.detail) return formatApiError(result.detail);
+    if (result.message) return String(result.message);
+    return JSON.stringify(result);
+  }
+  return String(result);
+}
+
 type CategoryForm = {
   name: string;
   slug: string;
@@ -69,7 +81,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       const response = await fetch("/api/admin/categories", { cache: "no-store" });
       const result = await response.json().catch(() => null);
       if (!response.ok || !result) {
-        throw new Error(result?.detail ?? result?.message ?? "Nao foi possivel carregar as categorias.");
+        throw new Error(formatApiError(result) || "Nao foi possivel carregar as categorias.");
       }
       setCategories(result as Category[]);
       setSubcategoryForm((current) => ({
@@ -118,7 +130,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       });
       const result = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(result?.detail ?? result?.message ?? "Nao foi possivel salvar a categoria.");
+        throw new Error(formatApiError(result) || "Nao foi possivel salvar a categoria.");
       }
       await loadCategories();
       resetCategoryForm();
@@ -140,7 +152,13 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       : `/api/admin/categories/${subcategoryForm.categoryId}/subcategories`;
     const method = editingSubcategoryId ? "PUT" : "POST";
     const payload = editingSubcategoryId
-      ? subcategoryForm
+      ? {
+          category_id: subcategoryForm.categoryId,
+          name: subcategoryForm.name,
+          slug: subcategoryForm.slug,
+          description: subcategoryForm.description,
+          image: subcategoryForm.image ?? null
+        }
       : {
           name: subcategoryForm.name,
           slug: subcategoryForm.slug,
@@ -156,7 +174,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       });
       const result = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(result?.detail ?? result?.message ?? "Nao foi possivel salvar a subcategoria.");
+        throw new Error(formatApiError(result) || "Nao foi possivel salvar a subcategoria.");
       }
       await loadCategories();
       resetSubcategoryForm();
@@ -180,7 +198,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       const response = await fetch("/api/admin/uploads/products", { method: "POST", body: form });
       const result = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(result?.message ?? "Falha ao enviar a imagem.");
+        throw new Error(formatApiError(result) || "Falha ao enviar a imagem.");
       }
       // result.publicUrl expected
       setSubcategoryForm((current) => ({ ...current, image: result.publicUrl }));
@@ -201,7 +219,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       const response = await fetch(endpoint, { method: "DELETE" });
       const result = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(result?.detail ?? result?.message ?? "Nao foi possivel excluir.");
+        throw new Error(formatApiError(result) || "Nao foi possivel excluir.");
       }
       await loadCategories();
       if (editingCategoryId === id) {
