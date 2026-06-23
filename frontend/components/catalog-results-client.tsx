@@ -1,7 +1,9 @@
 "use client";
 
 import { Search } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { ProductCard } from "@/components/product-card";
 import type { Product } from "@/lib/data";
@@ -23,6 +25,7 @@ export function CatalogResultsClient({
   subtitle: string;
   products: Product[];
 }) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("Todos");
   const [priceRange, setPriceRange] = useState("Todos");
@@ -57,50 +60,72 @@ export function CatalogResultsClient({
 
   return (
     <section className="space-y-4 md:space-y-6">
-      <div className="rounded-[1.5rem] border border-black/6 bg-white p-4 shadow-card md:rounded-[2rem] md:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.24em] text-black/35 md:text-xs">Catalogo</p>
-            <h1 className="mt-1 text-2xl font-semibold text-black md:text-4xl">{title}</h1>
-            <p className="mt-2 text-sm text-black/55">{subtitle}</p>
+      <div className="rounded-[1.5rem] border border-black/6 bg-white p-3 shadow-card md:rounded-[2rem] md:p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              aria-label="Voltar"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-black/6 bg-white shadow-sm transition hover:scale-95"
+            >
+              <ArrowLeft size={18} />
+            </button>
+
+            <div>
+              <p className="text-[9px] uppercase tracking-[0.22em] text-black/35 md:text-[10px]">Catálogo</p>
+              <h1 className="mt-1 text-lg font-semibold text-black md:text-2xl">{title}</h1>
+              <p className="mt-1 text-sm text-black/55">{subtitle}</p>
+            </div>
           </div>
 
-          <div className="grid gap-2 md:grid-cols-[minmax(220px,1fr)_auto_auto]">
-            <div className="flex h-10 overflow-hidden rounded-[1rem] border border-black/10 bg-[#fcfbf8] md:h-11">
-              <div className="flex w-10 items-center justify-center text-black/45 md:w-11">
-                <Search size={15} />
+          <div className="flex w-full max-w-2xl items-center gap-2 md:gap-3">
+            <div className="flex items-center gap-2 rounded-full bg-[#fcfbf8] px-3 py-2 shadow-sm md:px-4">
+              <div className="flex items-center justify-center text-black/45">
+                <Search size={16} />
               </div>
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar nesta selecao"
-                className="flex-1 border-0 bg-transparent pr-3 text-[13px] text-black outline-none md:pr-4 md:text-sm"
+                placeholder="Buscar nesta seleção"
+                className="w-full border-0 bg-transparent pr-2 text-[13px] text-black outline-none md:pr-3 md:text-sm"
               />
             </div>
 
-            <select
-              value={priceRange}
-              onChange={(event) => setPriceRange(event.target.value)}
-              className="h-10 rounded-2xl border border-black/10 bg-white px-3 text-[12px] text-black outline-none md:h-11 md:px-4 md:text-sm"
-            >
-              {priceOptions.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
+            <div className="hidden items-center gap-2 md:flex">
+              <div className="relative">
+                <select
+                  value={priceRange}
+                  onChange={(event) => setPriceRange(event.target.value)}
+                  className="h-9 w-44 appearance-none rounded-full border border-black/6 bg-white px-4 text-[13px] text-black outline-none shadow-sm"
+                >
+                  {priceOptions.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-black/40">
+                  <ChevronDown size={16} />
+                </div>
+              </div>
 
-            <select
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-              className="h-10 rounded-2xl border border-black/10 bg-white px-3 text-[12px] text-black outline-none md:h-11 md:px-4 md:text-sm"
-            >
-              {statusOptions.map((item) => (
-                <option key={item} value={item}>
-                  {item === "Available" ? "Disponivel" : item === "Reserved" ? "Reservado" : item === "Sold" ? "Vendido" : item}
-                </option>
-              ))}
-            </select>
+              <div className="relative">
+                <select
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value)}
+                  className="h-9 w-36 appearance-none rounded-full border border-black/6 bg-white px-4 text-[13px] text-black outline-none shadow-sm"
+                >
+                  {statusOptions.map((item) => (
+                    <option key={item} value={item}>
+                      {item === "Available" ? "Disponível" : item === "Reserved" ? "Reservado" : item === "Sold" ? "Vendido" : item}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-black/40">
+                  <ChevronDown size={16} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
