@@ -5,6 +5,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from app.core.config import settings
@@ -57,16 +58,16 @@ class WhatsAppNotificationService:
         message = WhatsAppMessage(
             phone=group_id,
             text=self.build_auto_product_message(product["name"], product["price"], product["product_url"]),
-            image_url=product.get("image_url"),
+            image_url=self.get_public_image_url(product.get("image_url")),
         )
         return self.send_message(message)
 
     def build_auto_product_message(self, product_name: str, price: str, product_url: str) -> str:
         return (
-            "🔥 Produto novo na loja!\n\n"
+            "\U0001f525 Produto novo na loja!\n\n"
             f"{product_name}\n"
-            f"💰 {price}\n\n"
-            "🛒 Comprar agora:\n"
+            f"\U0001f4b0 {price}\n\n"
+            "\U0001f6d2 Comprar agora:\n"
             f"{product_url}"
         )
 
@@ -98,6 +99,21 @@ class WhatsAppNotificationService:
         if not base:
             return f"/produto/{slug}"
         return f"{base}/produto/{slug}"
+
+    def get_public_image_url(self, image_url: str | None) -> str | None:
+        if not image_url:
+            return None
+
+        candidate = image_url.strip()
+        if not candidate:
+            return None
+
+        parsed = urlparse(candidate)
+        if parsed.scheme in {"http", "https"} and parsed.netloc:
+            return candidate
+
+        logger.warning("[whatsapp] ignoring non-public image url for broadcast: %s", candidate[:120])
+        return None
 
     def _send_via_generic_http(self, message: WhatsAppMessage) -> WhatsAppSendResult:
         if not settings.whatsapp_base_url:
@@ -131,17 +147,15 @@ class WhatsAppNotificationService:
             payload = {
                 "session": settings.whatsapp_session_name or settings.whatsapp_instance_name or "default",
                 "chatId": message.phone,
-                "file": {
-                    "url": message.image_url
-                },
-                "caption": message.text
+                "file": {"url": message.image_url},
+                "caption": message.text,
             }
         else:
             endpoint = f"{settings.whatsapp_base_url.rstrip('/')}/api/sendText"
             payload = {
                 "session": settings.whatsapp_session_name or settings.whatsapp_instance_name or "default",
                 "chatId": message.phone,
-                "text": message.text
+                "text": message.text,
             }
 
         request = Request(
@@ -234,11 +248,7 @@ class WhatsAppNotificationService:
                     payload = json.loads(raw) if raw else {}
                 except json.JSONDecodeError:
                     payload = {"raw": raw}
-                provider_message_id = (
-                    payload.get("key", {}).get("id")
-                    if isinstance(payload, dict)
-                    else None
-                )
+                provider_message_id = payload.get("key", {}).get("id") if isinstance(payload, dict) else None
                 if isinstance(payload, dict) and not provider_message_id:
                     provider_message_id = (
                         payload.get("id")

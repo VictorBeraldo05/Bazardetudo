@@ -175,3 +175,23 @@ Base oficial usada nesta integraÃ§Ã£o:
   - body: `{ "product_id": "..." }`
 
 Mais detalhes em [docs/architecture.md](docs/architecture.md), [docs/deploy.md](docs/deploy.md) e [docs/erd.md](docs/erd.md).
+
+## Upload publico de imagens dos produtos
+
+- O cadastro de produto no admin agora envia a imagem primeiro para o Supabase Storage.
+- Depois do upload, o produto eh salvo com a URL publica retornada pelo bucket.
+- Essa URL publica eh reaproveitada na home, no catalogo, na pagina do produto e no disparo automatico para grupos de WhatsApp.
+
+### Configuracao necessaria
+
+1. No Supabase, crie um bucket publico chamado `product-images` ou use outro nome e informe em `SUPABASE_STORAGE_BUCKET`.
+2. No Vercel do frontend, configure:
+   - `SUPABASE_URL=https://seu-projeto.supabase.co`
+   - `SUPABASE_SERVICE_ROLE_KEY=seu-service-role-key`
+   - `SUPABASE_STORAGE_BUCKET=product-images`
+3. Faça um novo deploy do frontend.
+
+### Observacoes
+
+- Se o bucket nao existir ou as variaveis do Supabase nao estiverem configuradas no Vercel, o cadastro do produto com imagem vai falhar na etapa de upload.
+- O backend continua recebendo apenas a URL final da imagem, entao o fluxo de cadastro do produto e o disparo do WhatsApp permanecem desacoplados do storage.

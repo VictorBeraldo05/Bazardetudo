@@ -165,6 +165,7 @@ export function AdminProductsManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingLoading, setEditingLoading] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filter, setFilter] = useState("todos");
   const [query, setQuery] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
@@ -193,6 +194,7 @@ export function AdminProductsManager({
   function resetForm() {
     setForm(EMPTY_FORM);
     setPreview(null);
+    setSelectedFile(null);
     setSlugTouched(false);
     setSkuTouched(false);
     setDescriptionTouched(false);
@@ -209,9 +211,11 @@ export function AdminProductsManager({
   async function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) {
-      setPreview(editingId ? preview : null);
+      setSelectedFile(null);
       return;
     }
+
+    setSelectedFile(file);
 
     const reader = new FileReader();
     reader.onload = () => setPreview(typeof reader.result === "string" ? reader.result : null);
@@ -236,7 +240,29 @@ export function AdminProductsManager({
     });
   }
 
-  function buildPayload() {
+  async function uploadProductImage() {
+    if (!selectedFile) {
+      return preview && /^https?:\/\//i.test(preview) ? preview : null;
+    }
+
+    const uploadFormData = new FormData();
+    uploadFormData.append("file", selectedFile);
+    uploadFormData.append("slug", form.slug || form.name);
+
+    const response = await fetch("/api/admin/uploads/products", {
+      method: "POST",
+      body: uploadFormData
+    });
+
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.publicUrl) {
+      throw new Error(result?.message ?? "Nao foi possivel publicar a imagem do produto.");
+    }
+
+    return result.publicUrl as string;
+  }
+
+  function buildPayload(imageUrl: string | null) {
     return {
       name: form.name,
       slug: form.slug,
@@ -253,7 +279,7 @@ export function AdminProductsManager({
       tags: form.tags,
       featured: form.featured,
       is_offer: form.isOffer,
-      image_url: preview,
+      image_url: imageUrl,
       image_alt_text: form.name
     };
   }
@@ -269,11 +295,12 @@ export function AdminProductsManager({
     setLoading(true);
     setMessage(null);
 
-    const payload = buildPayload();
-    const target = editingId ? `/api/admin/products/${editingId}` : "/api/admin/products";
-    const method = editingId ? "PUT" : "POST";
-
     try {
+      const uploadedImageUrl = await uploadProductImage();
+      const payload = buildPayload(uploadedImageUrl);
+      const target = editingId ? `/api/admin/products/${editingId}` : "/api/admin/products";
+      const method = editingId ? "PUT" : "POST";
+
       const response = await fetch(target, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -340,6 +367,7 @@ export function AdminProductsManager({
         isOffer: Boolean(result.is_offer)
       });
       setPreview(result.images?.[0]?.image_url ?? null);
+      setSelectedFile(null);
       setSlugTouched(true);
       setSkuTouched(true);
       setDescriptionTouched(true);
