@@ -26,6 +26,7 @@ type SubcategoryForm = {
   name: string;
   slug: string;
   description: string;
+  image?: string | null;
 };
 
 const EMPTY_CATEGORY_FORM: CategoryForm = {
@@ -38,7 +39,8 @@ const EMPTY_SUBCATEGORY_FORM: SubcategoryForm = {
   categoryId: "",
   name: "",
   slug: "",
-  description: ""
+  description: "",
+  image: null
 };
 
 export function AdminCategoriesManager({ initialCategories }: { initialCategories: Category[] }) {
@@ -53,6 +55,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
     ...EMPTY_SUBCATEGORY_FORM,
     categoryId: initialCategories[0]?.id ?? ""
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [categorySlugEdited, setCategorySlugEdited] = useState(false);
   const [subcategorySlugEdited, setSubcategorySlugEdited] = useState(false);
 
@@ -136,11 +139,14 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       ? `/api/admin/subcategories/${editingSubcategoryId}`
       : `/api/admin/categories/${subcategoryForm.categoryId}/subcategories`;
     const method = editingSubcategoryId ? "PUT" : "POST";
-    const payload = editingSubcategoryId ? subcategoryForm : {
-      name: subcategoryForm.name,
-      slug: subcategoryForm.slug,
-      description: subcategoryForm.description
-    };
+    const payload = editingSubcategoryId
+      ? subcategoryForm
+      : {
+          name: subcategoryForm.name,
+          slug: subcategoryForm.slug,
+          description: subcategoryForm.description,
+          image: subcategoryForm.image ?? null
+        };
 
     try {
       const response = await fetch(target, {
@@ -159,6 +165,30 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       setMessage(error instanceof Error ? error.message : "Nao foi possivel salvar a subcategoria.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleImageSelect(file?: File | null) {
+    if (!file) return;
+    setUploadingImage(true);
+    setMessage(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("slug", subcategoryForm.slug || "subcategory");
+
+      const response = await fetch("/api/admin/uploads/products", { method: "POST", body: form });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(result?.message ?? "Falha ao enviar a imagem.");
+      }
+      // result.publicUrl expected
+      setSubcategoryForm((current) => ({ ...current, image: result.publicUrl }));
+      setMessage("Imagem enviada com sucesso.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Erro ao enviar imagem.");
+    } finally {
+      setUploadingImage(false);
     }
   }
 
@@ -318,6 +348,40 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
               />
             </div>
             <div className="space-y-2">
+              <p className="text-sm font-semibold text-black">Imagem (opcional)</p>
+              <div className="flex items-center gap-3">
+                <div className="h-20 w-20 overflow-hidden rounded-md bg-[#f3f2ef]">
+                  {subcategoryForm.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={subcategoryForm.image} alt={subcategoryForm.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-sm text-black/45">Sem imagem</div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="inline-flex cursor-pointer items-center rounded-2xl border border-black/10 bg-white px-4 py-2 text-sm">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageSelect(e.target.files?.[0] ?? null)}
+                      className="hidden"
+                    />
+                    {uploadingImage ? "Enviando..." : "Escolher imagem"}
+                  </label>
+                  {subcategoryForm.image ? (
+                    <button
+                      type="button"
+                      onClick={() => setSubcategoryForm((current) => ({ ...current, image: null }))}
+                      className="text-sm text-[#b13f2b]"
+                    >
+                      Remover imagem
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
               <p className="text-sm font-semibold text-black">Descricao</p>
               <textarea
                 value={subcategoryForm.description}
@@ -393,7 +457,8 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                             categoryId: category.id,
                             name: subcategory.name,
                             slug: subcategory.slug,
-                            description: subcategory.description ?? ""
+                            description: subcategory.description ?? "",
+                            image: (subcategory as any).image ?? null
                           });
                           setSubcategorySlugEdited(true);
                         }}
