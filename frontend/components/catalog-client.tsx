@@ -122,15 +122,23 @@ export function CatalogClient({
 
   return (
     <section className="space-y-4 md:space-y-6">
-      <div className="grid gap-4 lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[270px_minmax(0,1fr)]">
-        <aside className="overflow-hidden rounded-[1.6rem] border border-black/6 bg-white shadow-card">
-          <div className="border-b border-black/6 px-4 py-3 md:px-5 md:py-4">
-            <p className="text-[10px] uppercase tracking-[0.24em] text-black/35 md:text-xs">Categorias</p>
-            <h2 className="mt-1 text-lg font-semibold text-black md:text-2xl">Navegacao</h2>
+      <div className="space-y-4 lg:hidden">
+        <div className="rounded-[1.6rem] border border-black/6 bg-white p-4 shadow-card">
+          <div className="flex h-11 overflow-hidden rounded-[1rem] border border-black/10 bg-[#fcfbf8]">
+            <div className="flex w-11 items-center justify-center text-black/45">
+              <Search size={16} />
+            </div>
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar produtos no catalogo"
+              className="flex-1 border-0 bg-transparent pr-4 text-[14px] text-black outline-none"
+            />
           </div>
 
-          <div className="grid grid-cols-[110px_minmax(0,1fr)] lg:block">
-            <div className="border-r border-black/6 bg-[#f7f4ee] lg:border-r-0">
+          <div className="mt-4">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-black/35">Categorias</p>
+            <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
               {categories.map((category) => {
                 const isActive = category.id === activeCategory?.id;
                 return (
@@ -141,101 +149,124 @@ export function CatalogClient({
                       setActiveCategoryId(category.id);
                       setActiveSubcategoryId("all");
                     }}
-                    className={`relative flex min-h-[84px] w-full items-center border-b border-black/6 px-3 py-3 text-left text-[14px] leading-5 lg:min-h-[74px] lg:px-5 ${
-                      isActive ? "bg-white font-semibold text-[#2f6ce5]" : "text-black/76"
+                    className={`whitespace-nowrap rounded-full px-4 py-2.5 text-[13px] font-medium transition ${
+                      isActive ? "bg-[#171717] text-white" : "border border-black/10 bg-[#f6f2eb] text-black"
                     }`}
                   >
-                    {isActive ? <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[#2f6ce5]" /> : null}
-                    <span className="pl-2 lg:pl-0">{category.name}</span>
+                    {category.name}
                   </button>
                 );
               })}
             </div>
+          </div>
 
-            <div className="p-3 lg:hidden">
-              <div className="space-y-3">
-                <div className="flex h-10 overflow-hidden rounded-[1rem] border border-black/10 bg-white">
-                  <div className="flex w-10 items-center justify-center text-black/45">
-                    <Search size={15} />
-                  </div>
-                  <input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder={`Buscar em ${activeCategory?.name ?? "catalogo"}`}
-                    className="flex-1 border-0 bg-transparent pr-3 text-[14px] text-black outline-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={priceRange}
-                    onChange={(event) => setPriceRange(event.target.value)}
-                    className="h-10 rounded-2xl border border-black/10 bg-white px-3 text-[13px] text-black outline-none"
-                  >
-                    {priceOptions.map((item) => (
-                      <option key={item.value} value={item.value}>
-                        {item.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={status}
-                    onChange={(event) => setStatus(event.target.value)}
-                    className="h-10 rounded-2xl border border-black/10 bg-white px-3 text-[13px] text-black outline-none"
-                  >
-                    {statusOptions.map((item) => (
-                      <option key={item} value={item}>
-                        {item === "Available" ? "Disponivel" : item === "Reserved" ? "Reservado" : item === "Sold" ? "Vendido" : item}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <h3 className="text-base font-semibold text-black">{activeCategory?.name ?? "Categoria"}</h3>
-                  <p className="mt-1 text-[13px] leading-5 text-black/52">Subcategorias para navegar mais rapido.</p>
-                </div>
-
-                <div className="grid grid-cols-3 gap-x-2 gap-y-4">
-                  <button
-                    type="button"
-                    onClick={() => setActiveSubcategoryId("all")}
-                    className={`text-center ${activeSubcategoryId === "all" ? "text-[#2f6ce5]" : "text-black"}`}
-                  >
-                    <div className={`mx-auto flex h-[4rem] w-[4rem] items-center justify-center rounded-full border ${
-                      activeSubcategoryId === "all" ? "border-[#2f6ce5] bg-[#eef4ff]" : "border-black/8 bg-[#f6f4ef]"
-                    }`}>
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">Tudo</span>
-                    </div>
-                    <p className="mt-2 text-[11px] font-medium leading-4">Ver tudo</p>
-                  </button>
-
-                  {subcategoryTiles.map((subcategory) => {
-                    const isActive = activeSubcategoryId === subcategory.id;
-                    return (
-                      <button
-                        key={subcategory.id}
-                        type="button"
-                        onClick={() => setActiveSubcategoryId(subcategory.id)}
-                        className={`text-center ${isActive ? "text-[#2f6ce5]" : "text-black"}`}
-                      >
-                        <div className={`relative mx-auto h-[4rem] w-[4rem] overflow-hidden rounded-full border ${
-                          isActive ? "border-[#2f6ce5]" : "border-black/8"
-                        } bg-[#f4f1ea]`}>
-                          <Image src={subcategory.image} alt={subcategory.name} fill className="object-cover" />
-                        </div>
-                        <p className="mt-2 line-clamp-2 text-[11px] font-medium leading-4">{subcategory.name}</p>
-                      </button>
-                    );
-                  })}
-                </div>
+          <div className="mt-4">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.22em] text-black/35">Subcategorias</p>
+                <h2 className="mt-1 text-lg font-semibold text-black">{activeCategory?.name ?? "Catalogo"}</h2>
               </div>
+              <p className="text-[12px] text-black/45">{filtered.length} itens</p>
             </div>
+
+            <div className="-mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-1">
+              <button
+                type="button"
+                onClick={() => setActiveSubcategoryId("all")}
+                className="w-[86px] flex-shrink-0 text-center"
+              >
+                <div className={`mx-auto flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full border ${
+                  activeSubcategoryId === "all" ? "border-[#2f6ce5] bg-[#eef4ff]" : "border-black/8 bg-[#f6f4ef]"
+                }`}>
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.16em]">Tudo</span>
+                </div>
+                <p className={`mt-2 line-clamp-2 text-[11px] font-medium leading-4 ${activeSubcategoryId === "all" ? "text-[#2f6ce5]" : "text-black"}`}>
+                  Ver tudo
+                </p>
+              </button>
+
+              {subcategoryTiles.map((subcategory) => {
+                const isActive = activeSubcategoryId === subcategory.id;
+                return (
+                  <button
+                    key={subcategory.id}
+                    type="button"
+                    onClick={() => setActiveSubcategoryId(subcategory.id)}
+                    className="w-[86px] flex-shrink-0 text-center"
+                  >
+                    <div className={`relative mx-auto h-[4.25rem] w-[4.25rem] overflow-hidden rounded-full border ${
+                      isActive ? "border-[#2f6ce5]" : "border-black/8"
+                    } bg-[#f4f1ea]`}>
+                      <Image src={subcategory.image} alt={subcategory.name} fill className="object-cover" />
+                    </div>
+                    <p className={`mt-2 line-clamp-2 text-[11px] font-medium leading-4 ${isActive ? "text-[#2f6ce5]" : "text-black"}`}>
+                      {subcategory.name}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <select
+              value={priceRange}
+              onChange={(event) => setPriceRange(event.target.value)}
+              className="h-10 rounded-2xl border border-black/10 bg-white px-3 text-[13px] text-black outline-none"
+            >
+              {priceOptions.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+              className="h-10 rounded-2xl border border-black/10 bg-white px-3 text-[13px] text-black outline-none"
+            >
+              {statusOptions.map((item) => (
+                <option key={item} value={item}>
+                  {item === "Available" ? "Disponivel" : item === "Reserved" ? "Reservado" : item === "Sold" ? "Vendido" : item}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden gap-4 lg:grid lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[270px_minmax(0,1fr)]">
+        <aside className="overflow-hidden rounded-[1.6rem] border border-black/6 bg-white shadow-card">
+          <div className="border-b border-black/6 px-4 py-3 md:px-5 md:py-4">
+            <p className="text-[10px] uppercase tracking-[0.24em] text-black/35 md:text-xs">Categorias</p>
+            <h2 className="mt-1 text-lg font-semibold text-black md:text-2xl">Navegacao</h2>
+          </div>
+
+          <div className="bg-[#f7f4ee]">
+            {categories.map((category) => {
+              const isActive = category.id === activeCategory?.id;
+              return (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveCategoryId(category.id);
+                    setActiveSubcategoryId("all");
+                  }}
+                  className={`relative flex min-h-[74px] w-full items-center border-b border-black/6 px-5 text-left ${
+                    isActive ? "bg-white font-semibold text-[#2f6ce5]" : "text-black/76"
+                  }`}
+                >
+                  {isActive ? <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[#2f6ce5]" /> : null}
+                  <span>{category.name}</span>
+                </button>
+              );
+            })}
           </div>
         </aside>
 
-        <div className="hidden space-y-4 lg:block">
+        <div className="space-y-4">
           <div className="rounded-[1.8rem] border border-black/6 bg-white p-5 shadow-card">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div>
