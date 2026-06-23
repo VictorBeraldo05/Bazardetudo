@@ -235,11 +235,11 @@ export function AdminWhatsAppSettings() {
           </form>
 
           <div className="mt-6 rounded-[1.5rem] bg-[#f8f3ea] p-4 text-sm text-black/62">
-            <p className="font-semibold text-black">Checklist Evolution API</p>
-            <p className="mt-2">1. Instancia conectada por QR.</p>
+            <p className="font-semibold text-black">Checklist GREEN-API</p>
+            <p className="mt-2">1. Instancia criada e conectada por QR no painel da GREEN-API.</p>
             <p>2. Grupo existente e com ID correto.</p>
-            <p>3. `WHATSAPP_PROVIDER=evolution` no Render.</p>
-            <p>4. `WHATSAPP_INSTANCE_NAME`, `WHATSAPP_BASE_URL` e `WHATSAPP_API_TOKEN` preenchidos.</p>
+            <p>3. `WHATSAPP_PROVIDER=green-api` no Render.</p>
+            <p>4. `WHATSAPP_BASE_URL`, `WHATSAPP_INSTANCE_ID` e `WHATSAPP_API_TOKEN` preenchidos.</p>
             <p>5. `STOREFRONT_PUBLIC_URL` apontando para a Vercel.</p>
           </div>
         </section>

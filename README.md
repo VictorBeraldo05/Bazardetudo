@@ -83,10 +83,12 @@ npm run dev
 
 #### VariÃ¡veis de ambiente
 
-- `WHATSAPP_PROVIDER=mock|evolution|http`
+- `WHATSAPP_PROVIDER=mock|green-api|waha|http|evolution`
 - `WHATSAPP_BASE_URL=` URL base do gateway/provedor
+- `WHATSAPP_INSTANCE_ID=` id da instÃ¢ncia no GREEN-API
 - `WHATSAPP_API_TOKEN=` token do gateway
-- `WHATSAPP_INSTANCE_NAME=` nome da instÃ¢ncia no provedor (usado no modo `evolution`)
+- `WHATSAPP_SESSION_NAME=default` nome da sessÃ£o no WAHA
+- `WHATSAPP_INSTANCE_NAME=` compatibilidade legada com integraÃ§Ãµes anteriores
 - `WHATSAPP_AUTO_SEND_PRODUCTS=true`
 - `WHATSAPP_SEND_DELAY_MS=5000`
 - `WHATSAPP_WORKER_POLL_INTERVAL_SECONDS=10`
@@ -97,34 +99,48 @@ npm run dev
 #### Como conectar o WhatsApp
 
 - Em ambiente real, a opÃ§Ã£o mais compatÃ­vel com esta stack Ã© usar um gateway HTTP de WhatsApp e deixar a sessÃ£o persistente nesse gateway.
-- O modo `evolution` foi preparado para integraÃ§Ã£o com Evolution API, usando `WHATSAPP_BASE_URL`, `WHATSAPP_API_TOKEN` e `WHATSAPP_INSTANCE_NAME`.
+- O modo `green-api` Ã© agora a integraÃ§Ã£o principal recomendada para este projeto.
+- O modo `green-api` usa `WHATSAPP_BASE_URL`, `WHATSAPP_INSTANCE_ID` e `WHATSAPP_API_TOKEN`.
+- O modo `waha` usa `WHATSAPP_BASE_URL`, `WHATSAPP_API_TOKEN` e `WHATSAPP_SESSION_NAME`.
 - O modo `mock` nÃ£o envia mensagens reais, apenas simula o envio para teste do fluxo.
 
-#### Passo a passo exato com Evolution API
+#### Passo a passo exato com GREEN-API
 
-1. Suba sua Evolution API em um ambiente com sessÃ£o persistente.
-2. Crie uma instÃ¢ncia para a loja. Exemplo de nome: `bazar-de-tudo`.
-3. Conecte o WhatsApp lendo o QR Code dessa instÃ¢ncia.
-4. No painel do grupo de divulgaÃ§Ã£o, obtenha o ID real do grupo. Normalmente ele termina com `@g.us`.
-5. No Render do backend, configure:
-   - `WHATSAPP_PROVIDER=evolution`
-   - `WHATSAPP_BASE_URL=https://sua-evolution.exemplo.com`
-   - `WHATSAPP_API_TOKEN=seu-token`
-   - `WHATSAPP_INSTANCE_NAME=bazar-de-tudo`
+Base oficial usada nesta integraÃ§Ã£o:
+- GREEN-API envia texto por `POST /waInstance{idInstance}/sendMessage/{apiTokenInstance}` com `chatId` e `message`.
+- GREEN-API envia imagem por `POST /waInstance{idInstance}/sendFileByUrl/{apiTokenInstance}` com `chatId`, `urlFile`, `fileName` e `caption`.
+- IDs de grupos usam formato `1234567890-123456789@g.us`.
+- A documentaÃ§Ã£o oficial do GREEN-API tambÃ©m fornece `GetStateInstance` e `QR` para acompanhar conexÃ£o e autenticaÃ§Ã£o.
+
+1. Crie uma conta na GREEN-API e gere uma instÃ¢ncia no plano free.
+2. Aguarde a instÃ¢ncia ficar operacional.
+3. No painel da GREEN-API, pegue:
+   - `apiUrl`
+   - `idInstance`
+   - `apiTokenInstance`
+4. Use o QR oficial da instÃ¢ncia para conectar o WhatsApp que vai divulgar os produtos.
+5. Confirme o status da instÃ¢ncia com `GetStateInstance`.
+6. Adicione esse nÃºmero nos grupos de divulgaÃ§Ã£o.
+7. Obtenha os IDs reais dos grupos no formato `...@g.us`.
+8. No Render do backend da loja, configure:
+   - `WHATSAPP_PROVIDER=green-api`
+   - `WHATSAPP_BASE_URL=https://7105.api.green-api.com`
+   - `WHATSAPP_INSTANCE_ID=1101000000`
+   - `WHATSAPP_API_TOKEN=seu-apiTokenInstance`
    - `WHATSAPP_AUTO_SEND_PRODUCTS=true`
    - `WHATSAPP_SEND_DELAY_MS=5000`
    - `WHATSAPP_WORKER_POLL_INTERVAL_SECONDS=10`
    - `WHATSAPP_SEND_MAX_RETRIES=3`
    - `WHATSAPP_REQUEST_TIMEOUT_SECONDS=30`
    - `STOREFRONT_PUBLIC_URL=https://seu-site.vercel.app`
-6. FaÃ§a novo deploy do backend no Render.
-7. No admin da loja, abra `Configuracoes`.
-8. Cadastre cada grupo com:
+9. FaÃ§a novo deploy do backend da loja.
+10. No admin da loja, abra `Configuracoes`.
+11. Cadastre cada grupo com:
    - nome interno
    - ID do grupo do WhatsApp
    - status ativo
-9. Cadastre um produto novo no admin.
-10. Confira os resultados em:
+12. Cadastre um produto novo no admin.
+13. Confira os resultados em:
    - `Configuracoes` no painel
    - `GET /api/v1/whatsapp/jobs`
    - `GET /api/v1/whatsapp/logs`
@@ -135,7 +151,7 @@ npm run dev
 2. Cadastre um grupo qualquer no admin.
 3. Cadastre um produto novo.
 4. Verifique se o job e o log foram criados.
-5. Depois troque para `WHATSAPP_PROVIDER=evolution` e redeploy.
+5. Depois troque para `WHATSAPP_PROVIDER=green-api` e redeploy.
 
 #### Como cadastrar IDs dos grupos
 

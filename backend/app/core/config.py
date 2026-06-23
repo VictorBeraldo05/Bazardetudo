@@ -30,7 +30,9 @@ class Settings(BaseSettings):
     heartbeat_enabled: bool = False
     heartbeat_interval_minutes: int = 10
     storefront_public_url: str | None = None
+    whatsapp_instance_id: str | None = None
     whatsapp_instance_name: str | None = None
+    whatsapp_session_name: str = "default"
     whatsapp_auto_send_products: bool = True
     whatsapp_send_delay_ms: int = 5000
     whatsapp_worker_poll_interval_seconds: int = 10
@@ -75,6 +77,21 @@ class Settings(BaseSettings):
             return None
         normalized = value.strip().rstrip("/")
         return normalized or None
+
+    @field_validator("whatsapp_instance_id", "whatsapp_instance_name", mode="before")
+    @classmethod
+    def normalize_instance_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+    @field_validator("whatsapp_session_name", mode="before")
+    @classmethod
+    def normalize_session_name(cls, value: str | None) -> str:
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        return "default"
 
     @field_validator(
         "heartbeat_interval_minutes",

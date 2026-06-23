@@ -43,6 +43,10 @@ class WhatsAppNotificationService:
         if provider == "mock":
             logger.info("[whatsapp] mock send -> %s", message.phone)
             return WhatsAppSendResult(provider="mock", status="queued", target=message.phone, payload={"mock": True})
+        if provider == "green-api":
+            return self._send_via_green_api(message)
+        if provider == "waha":
+            return self._send_via_waha(message)
         if provider == "evolution":
             return self._send_via_evolution(message)
         if provider == "http":
@@ -116,6 +120,77 @@ class WhatsAppNotificationService:
         )
         return self._perform_request(request, message.phone, "http")
 
+    def _send_via_waha(self, message: WhatsAppMessage) -> WhatsAppSendResult:
+        if not settings.whatsapp_base_url:
+            raise RuntimeError("WHATSAPP_BASE_URL nao configurado")
+        if not settings.whatsapp_api_token:
+            raise RuntimeError("WHATSAPP_API_TOKEN nao configurado")
+
+        if message.image_url:
+            endpoint = f"{settings.whatsapp_base_url.rstrip('/')}/api/sendImage"
+            payload = {
+                "session": settings.whatsapp_session_name or settings.whatsapp_instance_name or "default",
+                "chatId": message.phone,
+                "file": {
+                    "url": message.image_url
+                },
+                "caption": message.text
+            }
+        else:
+            endpoint = f"{settings.whatsapp_base_url.rstrip('/')}/api/sendText"
+            payload = {
+                "session": settings.whatsapp_session_name or settings.whatsapp_instance_name or "default",
+                "chatId": message.phone,
+                "text": message.text
+            }
+
+        request = Request(
+            endpoint,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "X-Api-Key": settings.whatsapp_api_token,
+                "Accept": "application/json",
+            },
+            method="POST",
+        )
+        return self._perform_request(request, message.phone, "waha")
+
+    def _send_via_green_api(self, message: WhatsAppMessage) -> WhatsAppSendResult:
+        if not settings.whatsapp_base_url:
+            raise RuntimeError("WHATSAPP_BASE_URL nao configurado")
+        if not settings.whatsapp_instance_id:
+            raise RuntimeError("WHATSAPP_INSTANCE_ID nao configurado")
+        if not settings.whatsapp_api_token:
+            raise RuntimeError("WHATSAPP_API_TOKEN nao configurado")
+
+        base_url = settings.whatsapp_base_url.rstrip("/")
+        if message.image_url:
+            endpoint = f"{base_url}/waInstance{settings.whatsapp_instance_id}/sendFileByUrl/{settings.whatsapp_api_token}"
+            payload = {
+                "chatId": message.phone,
+                "urlFile": message.image_url,
+                "fileName": "produto.jpg",
+                "caption": message.text,
+            }
+        else:
+            endpoint = f"{base_url}/waInstance{settings.whatsapp_instance_id}/sendMessage/{settings.whatsapp_api_token}"
+            payload = {
+                "chatId": message.phone,
+                "message": message.text,
+            }
+
+        request = Request(
+            endpoint,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            method="POST",
+        )
+        return self._perform_request(request, message.phone, "green-api")
+
     def _send_via_evolution(self, message: WhatsAppMessage) -> WhatsAppSendResult:
         if not settings.whatsapp_base_url:
             raise RuntimeError("WHATSAPP_BASE_URL nao configurado")
@@ -164,6 +239,13 @@ class WhatsAppNotificationService:
                     if isinstance(payload, dict)
                     else None
                 )
+                if isinstance(payload, dict) and not provider_message_id:
+                    provider_message_id = (
+                        payload.get("id")
+                        or payload.get("idMessage")
+                        or payload.get("messageId")
+                        or payload.get("message", {}).get("id")
+                    )
                 return WhatsAppSendResult(
                     provider=provider,
                     status="sent",
