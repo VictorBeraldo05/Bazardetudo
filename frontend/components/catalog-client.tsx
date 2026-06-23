@@ -123,22 +123,23 @@ export function CatalogClient({
   return (
     <section className="space-y-4 md:space-y-6">
       <div className="space-y-4 lg:hidden">
-        <div className="rounded-[1.6rem] border border-black/6 bg-white p-4 shadow-card">
-          <div className="flex h-11 overflow-hidden rounded-[1rem] border border-black/10 bg-[#fcfbf8]">
-            <div className="flex w-11 items-center justify-center text-black/45">
-              <Search size={16} />
+        <div className="overflow-hidden rounded-[1.45rem] border border-black/6 bg-white shadow-card">
+          <div className="border-b border-black/6 px-3 py-3">
+            <div className="flex h-10 overflow-hidden rounded-[0.95rem] border border-black/10 bg-[#fcfbf8]">
+              <div className="flex w-10 items-center justify-center text-black/45">
+                <Search size={15} />
+              </div>
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Buscar produtos no catalogo"
+                className="flex-1 border-0 bg-transparent pr-3 text-[13px] text-black outline-none"
+              />
             </div>
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar produtos no catalogo"
-              className="flex-1 border-0 bg-transparent pr-4 text-[14px] text-black outline-none"
-            />
           </div>
 
-          <div className="mt-4">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-black/35">Categorias</p>
-            <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
+          <div className="grid grid-cols-[104px_minmax(0,1fr)]">
+            <div className="border-r border-black/6 bg-[#f7f4ee]">
               {categories.map((category) => {
                 const isActive = category.id === activeCategory?.id;
                 return (
@@ -149,89 +150,90 @@ export function CatalogClient({
                       setActiveCategoryId(category.id);
                       setActiveSubcategoryId("all");
                     }}
-                    className={`whitespace-nowrap rounded-full px-4 py-2.5 text-[13px] font-medium transition ${
-                      isActive ? "bg-[#171717] text-white" : "border border-black/10 bg-[#f6f2eb] text-black"
+                    className={`relative flex min-h-[72px] w-full items-center border-b border-black/6 px-3 py-3 text-left text-[12px] leading-5 ${
+                      isActive ? "bg-white font-semibold text-[#2f6ce5]" : "text-black/78"
                     }`}
                   >
-                    {category.name}
+                    {isActive ? <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full bg-[#2f6ce5]" /> : null}
+                    <span className="pl-2">{category.name}</span>
                   </button>
                 );
               })}
             </div>
-          </div>
 
-          <div className="mt-4">
-            <div className="flex items-end justify-between gap-3">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.22em] text-black/35">Subcategorias</p>
-                <h2 className="mt-1 text-lg font-semibold text-black">{activeCategory?.name ?? "Catalogo"}</h2>
-              </div>
-              <p className="text-[12px] text-black/45">{filtered.length} itens</p>
-            </div>
-
-            <div className="-mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-1">
-              <button
-                type="button"
-                onClick={() => setActiveSubcategoryId("all")}
-                className="w-[86px] flex-shrink-0 text-center"
-              >
-                <div className={`mx-auto flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full border ${
-                  activeSubcategoryId === "all" ? "border-[#2f6ce5] bg-[#eef4ff]" : "border-black/8 bg-[#f6f4ef]"
-                }`}>
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.16em]">Tudo</span>
+            <div className="p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[9px] uppercase tracking-[0.22em] text-black/35">Subcategorias</p>
+                  <h2 className="mt-1 truncate text-[18px] font-semibold leading-tight text-black">{activeCategory?.name ?? "Catalogo"}</h2>
                 </div>
-                <p className={`mt-2 line-clamp-2 text-[11px] font-medium leading-4 ${activeSubcategoryId === "all" ? "text-[#2f6ce5]" : "text-black"}`}>
-                  Ver tudo
-                </p>
-              </button>
+                <p className="pt-1 text-[10px] text-black/45">{filtered.length} itens</p>
+              </div>
 
-              {subcategoryTiles.map((subcategory) => {
-                const isActive = activeSubcategoryId === subcategory.id;
-                return (
-                  <button
-                    key={subcategory.id}
-                    type="button"
-                    onClick={() => setActiveSubcategoryId(subcategory.id)}
-                    className="w-[86px] flex-shrink-0 text-center"
-                  >
-                    <div className={`relative mx-auto h-[4.25rem] w-[4.25rem] overflow-hidden rounded-full border ${
-                      isActive ? "border-[#2f6ce5]" : "border-black/8"
-                    } bg-[#f4f1ea]`}>
-                      <Image src={subcategory.image} alt={subcategory.name} fill className="object-cover" />
-                    </div>
-                    <p className={`mt-2 line-clamp-2 text-[11px] font-medium leading-4 ${isActive ? "text-[#2f6ce5]" : "text-black"}`}>
-                      {subcategory.name}
-                    </p>
-                  </button>
-                );
-              })}
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <select
+                  value={priceRange}
+                  onChange={(event) => setPriceRange(event.target.value)}
+                  className="h-9 min-w-0 rounded-2xl border border-black/10 bg-white px-2.5 text-[11px] text-black outline-none"
+                >
+                  {priceOptions.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value)}
+                  className="h-9 min-w-0 rounded-2xl border border-black/10 bg-white px-2.5 text-[11px] text-black outline-none"
+                >
+                  {statusOptions.map((item) => (
+                    <option key={item} value={item}>
+                      {item === "Available" ? "Disponivel" : item === "Reserved" ? "Reservado" : item === "Sold" ? "Vendido" : item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveSubcategoryId("all")}
+                  className="w-[72px] flex-shrink-0 text-center"
+                >
+                  <div className={`mx-auto flex h-[3.5rem] w-[3.5rem] items-center justify-center rounded-full border ${
+                    activeSubcategoryId === "all" ? "border-[#2f6ce5] bg-[#eef4ff]" : "border-black/8 bg-[#f6f4ef]"
+                  }`}>
+                    <span className="text-[9px] font-semibold uppercase tracking-[0.14em]">Tudo</span>
+                  </div>
+                  <p className={`mt-1.5 line-clamp-2 text-[10px] font-medium leading-3 ${activeSubcategoryId === "all" ? "text-[#2f6ce5]" : "text-black"}`}>
+                    Ver tudo
+                  </p>
+                </button>
+
+                {subcategoryTiles.map((subcategory) => {
+                  const isActive = activeSubcategoryId === subcategory.id;
+                  return (
+                    <button
+                      key={subcategory.id}
+                      type="button"
+                      onClick={() => setActiveSubcategoryId(subcategory.id)}
+                      className="w-[72px] flex-shrink-0 text-center"
+                    >
+                      <div className={`relative mx-auto h-[3.5rem] w-[3.5rem] overflow-hidden rounded-full border ${
+                        isActive ? "border-[#2f6ce5]" : "border-black/8"
+                      } bg-[#f4f1ea]`}>
+                        <Image src={subcategory.image} alt={subcategory.name} fill className="object-cover" />
+                      </div>
+                      <p className={`mt-1.5 line-clamp-2 text-[10px] font-medium leading-3 ${isActive ? "text-[#2f6ce5]" : "text-black"}`}>
+                        {subcategory.name}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <select
-              value={priceRange}
-              onChange={(event) => setPriceRange(event.target.value)}
-              className="h-10 rounded-2xl border border-black/10 bg-white px-3 text-[13px] text-black outline-none"
-            >
-              {priceOptions.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-              className="h-10 rounded-2xl border border-black/10 bg-white px-3 text-[13px] text-black outline-none"
-            >
-              {statusOptions.map((item) => (
-                <option key={item} value={item}>
-                  {item === "Available" ? "Disponivel" : item === "Reserved" ? "Reservado" : item === "Sold" ? "Vendido" : item}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
       </div>
