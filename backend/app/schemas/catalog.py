@@ -11,7 +11,32 @@ class CategoryRead(TimestampSchema):
     description: str | None = None
 
 
+class CategoryCreate(BaseModel):
+    name: str
+    slug: str
+    description: str | None = None
+
+
+class CategoryUpdate(BaseModel):
+    name: str
+    slug: str
+    description: str | None = None
+
+
 class SubcategoryRead(TimestampSchema):
+    category_id: str
+    name: str
+    slug: str
+    description: str | None = None
+
+
+class SubcategoryCreate(BaseModel):
+    name: str
+    slug: str
+    description: str | None = None
+
+
+class SubcategoryUpdate(BaseModel):
     category_id: str
     name: str
     slug: str

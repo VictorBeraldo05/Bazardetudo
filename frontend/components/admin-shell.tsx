@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, LogOut, Package2, Settings, ShoppingBag, Warehouse } from "lucide-react";
+import { BarChart3, FolderTree, LogOut, Package2, Settings, ShoppingBag, Warehouse } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 const items = [
   { href: "/admin", label: "Dashboard", icon: BarChart3 },
   { href: "/admin/produtos", label: "Produtos", icon: Package2 },
+  { href: "/admin/categorias", label: "Categorias", icon: FolderTree },
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag },
   { href: "/admin/estoque", label: "Estoque", icon: Warehouse },
   { href: "/admin/configuracoes", label: "Configuracoes", icon: Settings }
@@ -64,4 +65,3 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
