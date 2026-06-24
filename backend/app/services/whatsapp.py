@@ -31,6 +31,23 @@ class WhatsAppSendResult:
 
 
 class WhatsAppNotificationService:
+    def _normalize_public_base_url(self, value: str | None) -> str | None:
+        if not value:
+            return None
+
+        normalized = value.strip()
+        if not normalized:
+            return None
+
+        parsed = urlparse(normalized)
+        if parsed.scheme in {"http", "https"} and parsed.netloc:
+            return normalized.rstrip("/")
+
+        if normalized.startswith("//"):
+            return f"https:{normalized}".rstrip("/")
+
+        return f"https://{normalized.lstrip('/')}".rstrip("/")
+
     def send_product_broadcast(self, message: WhatsAppMessage) -> dict[str, str]:
         result = self.send_message(message)
         return {
@@ -95,7 +112,7 @@ class WhatsAppNotificationService:
         return f"R$ {whole_with_sep},{decimal}"
 
     def build_storefront_product_url(self, slug: str) -> str:
-        base = settings.storefront_public_url or settings.app_public_url
+        base = self._normalize_public_base_url(settings.storefront_public_url or settings.app_public_url)
         if not base:
             return f"/produto/{slug}"
         return f"{base}/produto/{slug}"
