@@ -63,6 +63,9 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingSubcategoryId, setEditingSubcategoryId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [managementMode, setManagementMode] = useState<"category" | "subcategory">("category");
+  const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategories[0]?.id ?? "");
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState("");
   const [categoryForm, setCategoryForm] = useState<CategoryForm>(EMPTY_CATEGORY_FORM);
   const [subcategoryForm, setSubcategoryForm] = useState<SubcategoryForm>({
     ...EMPTY_SUBCATEGORY_FORM,
@@ -78,6 +81,16 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
     [categories]
   );
 
+  const selectedCategory = useMemo(
+    () => categories.find((category) => category.id === selectedCategoryId) ?? categories[0] ?? null,
+    [categories, selectedCategoryId]
+  );
+
+  const selectedSubcategory = useMemo(
+    () => selectedCategory?.subcategories?.find((subcategory) => subcategory.id === selectedSubcategoryId) ?? null,
+    [selectedCategory, selectedSubcategoryId]
+  );
+
   async function loadCategories() {
     try {
       const response = await fetch("/api/admin/categories", { cache: "no-store" });
@@ -86,6 +99,16 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
         throw new Error(formatApiError(result) || "Nao foi possivel carregar as categorias.");
       }
       setCategories(result as Category[]);
+      setSelectedCategoryId((current) => current || result[0]?.id || "");
+      setSelectedSubcategoryId((current) => {
+        if (current) {
+          const exists = result.some((category: Category) => (category.subcategories ?? []).some((subcategory) => subcategory.id === current));
+          if (exists) {
+            return current;
+          }
+        }
+        return result[0]?.subcategories?.[0]?.id ?? "";
+      });
       setSubcategoryForm((current) => ({
         ...current,
         categoryId: current.categoryId || result[0]?.id || ""
@@ -100,6 +123,24 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       loadCategories();
     }
   }, []);
+
+  useEffect(() => {
+    if (!selectedCategoryId && categories[0]?.id) {
+      setSelectedCategoryId(categories[0].id);
+    }
+  }, [categories, selectedCategoryId]);
+
+  useEffect(() => {
+    if (managementMode !== "subcategory") {
+      return;
+    }
+
+    const firstSubcategoryId = selectedCategory?.subcategories?.[0]?.id ?? "";
+    const stillExists = (selectedCategory?.subcategories ?? []).some((subcategory) => subcategory.id === selectedSubcategoryId);
+    if (!stillExists) {
+      setSelectedSubcategoryId(firstSubcategoryId);
+    }
+  }, [managementMode, selectedCategory, selectedSubcategoryId]);
 
   function resetCategoryForm() {
     setCategoryForm(EMPTY_CATEGORY_FORM);
@@ -452,114 +493,150 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
               <div>
                 <p className="text-sm uppercase tracking-[0.24em] text-black/45">Mapa da loja</p>
                 <h2 className="text-2xl font-semibold text-black">Estrutura cadastrada</h2>
-                <p className="mt-1 text-sm text-black/50">Gerencie a arvore da loja em uma lista mais pratica, com acoes por linha.</p>
+                <p className="mt-1 text-sm text-black/50">Selecione exatamente o item que quer manter, editar ou excluir.</p>
               </div>
               <Button type="button" variant="outline" onClick={loadCategories}>Atualizar</Button>
             </div>
 
-            <div className="mt-5 space-y-4">
-              {categories.map((category) => (
-                <div key={category.id} className="overflow-hidden rounded-[1.5rem] border border-black/6 bg-[#fbfaf7]">
-                  <div className="flex flex-col gap-4 border-b border-black/6 px-4 py-4 lg:flex-row lg:items-start lg:justify-between lg:px-5">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-lg font-semibold text-black">{category.name}</p>
-                        <span className="rounded-full bg-white px-2.5 py-1 text-xs text-black/55">
-                          {(category.subcategories?.length ?? 0)} subcategorias
-                        </span>
-                      </div>
-                      <p className="mt-1 text-sm text-black/45">{category.slug}</p>
-                      {category.description ? <p className="mt-2 max-w-2xl text-sm leading-6 text-black/58">{category.description}</p> : null}
+            {categories.length > 0 ? (
+              <div className="mt-5 space-y-5">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-black">O que voce quer gerenciar?</p>
+                    <select
+                      value={managementMode}
+                      onChange={(event) => setManagementMode(event.target.value as "category" | "subcategory")}
+                      className="w-full rounded-2xl border border-black/10 px-4 py-3"
+                    >
+                      <option value="category">Categoria</option>
+                      <option value="subcategory">Subcategoria</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-black">Categoria base</p>
+                    <select
+                      value={selectedCategoryId}
+                      onChange={(event) => setSelectedCategoryId(event.target.value)}
+                      className="w-full rounded-2xl border border-black/10 px-4 py-3"
+                    >
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {managementMode === "subcategory" ? (
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-black">Subcategoria selecionada</p>
+                    <select
+                      value={selectedSubcategoryId}
+                      onChange={(event) => setSelectedSubcategoryId(event.target.value)}
+                      className="w-full rounded-2xl border border-black/10 px-4 py-3"
+                      disabled={!selectedCategory || (selectedCategory.subcategories?.length ?? 0) === 0}
+                    >
+                      {(selectedCategory?.subcategories ?? []).length > 0 ? (
+                        (selectedCategory?.subcategories ?? []).map((subcategory) => (
+                          <option key={subcategory.id} value={subcategory.id}>
+                            {subcategory.name}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">Nenhuma subcategoria nessa categoria</option>
+                      )}
+                    </select>
+                  </div>
+                ) : null}
+
+                {managementMode === "category" && selectedCategory ? (
+                  <div className="rounded-[1.5rem] border border-black/6 bg-[#fbfaf7] p-5">
+                    <p className="text-xs uppercase tracking-[0.22em] text-black/38">Categoria selecionada</p>
+                    <h3 className="mt-2 text-2xl font-semibold text-black">{selectedCategory.name}</h3>
+                    <p className="mt-1 text-sm text-black/45">{selectedCategory.slug}</p>
+                    {selectedCategory.description ? <p className="mt-3 text-sm leading-6 text-black/58">{selectedCategory.description}</p> : null}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="rounded-full bg-white px-3 py-1 text-xs text-black/55">
+                        {(selectedCategory.subcategories?.length ?? 0)} subcategorias vinculadas
+                      </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                       <button
                         type="button"
-                        onClick={() => startEditCategory(category)}
-                        className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-[#f4efe7]"
+                        onClick={() => startEditCategory(selectedCategory)}
+                        className="rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-medium text-black transition hover:bg-[#f4efe7]"
                       >
-                        Editar categoria
+                        Editar categoria selecionada
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDelete("category", category.id)}
-                        disabled={deletingId === category.id}
-                        className="rounded-full border border-[#d87b65]/20 bg-[#fff4f1] px-4 py-2 text-sm font-medium text-[#b13f2b] transition hover:bg-[#fde8e2] disabled:opacity-60"
+                        onClick={() => handleDelete("category", selectedCategory.id)}
+                        disabled={deletingId === selectedCategory.id}
+                        className="rounded-full border border-[#d87b65]/20 bg-[#fff4f1] px-5 py-3 text-sm font-medium text-[#b13f2b] transition hover:bg-[#fde8e2] disabled:opacity-60"
                       >
-                        {deletingId === category.id ? "Excluindo..." : "Excluir categoria"}
+                        {deletingId === selectedCategory.id ? "Excluindo..." : "Excluir categoria selecionada"}
                       </button>
                     </div>
                   </div>
+                ) : null}
 
-                  <div className="px-4 py-4 lg:px-5">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <p className="text-xs uppercase tracking-[0.22em] text-black/38">Subcategorias</p>
-                      {(category.subcategories?.length ?? 0) > 0 ? (
-                        <p className="text-xs text-black/40">Use editar para carregar a subcategoria no formulario.</p>
-                      ) : null}
+                {managementMode === "subcategory" ? (
+                  selectedSubcategory && selectedCategory ? (
+                    <div className="rounded-[1.5rem] border border-black/6 bg-[#fbfaf7] p-5">
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f4f1ea]">
+                          {selectedSubcategory.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={selectedSubcategory.image} alt={selectedSubcategory.name} className="h-full w-full object-contain p-2" />
+                          ) : (
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-black/35">Sem</span>
+                          )}
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-xs uppercase tracking-[0.22em] text-black/38">Subcategoria selecionada</p>
+                          <h3 className="mt-2 text-2xl font-semibold text-black">{selectedSubcategory.name}</h3>
+                          <p className="mt-1 text-sm text-black/45">{selectedSubcategory.slug}</p>
+                          <p className="mt-1 text-sm text-black/50">Categoria mae: {selectedCategory.name}</p>
+                          {selectedSubcategory.description ? (
+                            <p className="mt-3 text-sm leading-6 text-black/58">{selectedSubcategory.description}</p>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                        <button
+                          type="button"
+                          onClick={() => startEditSubcategory(selectedCategory, selectedSubcategory)}
+                          className="rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-medium text-black transition hover:bg-[#f4efe7]"
+                        >
+                          Editar subcategoria selecionada
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete("subcategory", selectedSubcategory.id)}
+                          disabled={deletingId === selectedSubcategory.id}
+                          className="rounded-full border border-[#d87b65]/20 bg-[#fff4f1] px-5 py-3 text-sm font-medium text-[#b13f2b] transition hover:bg-[#fde8e2] disabled:opacity-60"
+                        >
+                          {deletingId === selectedSubcategory.id ? "Excluindo..." : "Excluir subcategoria selecionada"}
+                        </button>
+                      </div>
                     </div>
-
-                    {(category.subcategories ?? []).length > 0 ? (
-                      <div className="space-y-2">
-                        {(category.subcategories ?? []).map((subcategory) => (
-                          <div
-                            key={subcategory.id}
-                            className="flex flex-col gap-3 rounded-[1.1rem] border border-black/6 bg-white px-3 py-3 md:flex-row md:items-center md:justify-between"
-                          >
-                            <div className="flex min-w-0 items-center gap-3">
-                              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f4f1ea]">
-                                {subcategory.image ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={subcategory.image} alt={subcategory.name} className="h-full w-full object-contain p-1.5" />
-                                ) : (
-                                  <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-black/35">Sem</span>
-                                )}
-                              </div>
-
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-black">{subcategory.name}</p>
-                                <p className="truncate text-xs text-black/42">{subcategory.slug}</p>
-                                {subcategory.description ? (
-                                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-black/55">{subcategory.description}</p>
-                                ) : null}
-                              </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2 md:justify-end">
-                              <button
-                                type="button"
-                                onClick={() => startEditSubcategory(category, subcategory)}
-                                className="rounded-full border border-black/10 bg-white px-3 py-2 text-sm font-medium text-black transition hover:bg-[#f4efe7]"
-                              >
-                                Editar
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete("subcategory", subcategory.id)}
-                                disabled={deletingId === subcategory.id}
-                                className="rounded-full border border-[#d87b65]/20 bg-[#fff4f1] px-3 py-2 text-sm font-medium text-[#b13f2b] transition hover:bg-[#fde8e2] disabled:opacity-60"
-                              >
-                                {deletingId === subcategory.id ? "Excluindo..." : "Excluir"}
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="rounded-[1.1rem] border border-dashed border-black/10 bg-white px-4 py-6 text-sm text-black/45">
-                        Nenhuma subcategoria cadastrada ainda.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {categories.length === 0 ? (
-                <div className="rounded-[1.5rem] border border-dashed border-black/10 px-4 py-8 text-center text-sm text-black/45">
-                  Nenhuma categoria cadastrada ainda.
-                </div>
-              ) : null}
-            </div>
+                  ) : (
+                    <div className="rounded-[1.5rem] border border-dashed border-black/10 bg-[#fbfaf7] px-4 py-6 text-sm text-black/45">
+                      Essa categoria ainda nao possui subcategorias para editar ou excluir.
+                    </div>
+                  )
+                ) : null}
+              </div>
+            ) : (
+              <div className="mt-5 rounded-[1.5rem] border border-dashed border-black/10 px-4 py-8 text-center text-sm text-black/45">
+                Nenhuma categoria cadastrada ainda.
+              </div>
+            )}
           </section>
         </section>
       </div>
