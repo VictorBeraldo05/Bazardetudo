@@ -5,12 +5,14 @@ export type Category = {
   name: string;
   slug: string;
   description?: string | null;
+  image?: string | null;
   subcategories?: Array<{
     id: string;
     category_id: string;
     name: string;
     slug: string;
     description?: string | null;
+    image?: string | null;
   }>;
 };
 

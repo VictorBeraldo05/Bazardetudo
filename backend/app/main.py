@@ -145,6 +145,16 @@ def ensure_backward_compatible_columns() -> None:
                     )
                     connection.execute(text("CREATE INDEX IF NOT EXISTS idx_products_subcategory ON products(subcategory_id)"))
 
+        if inspector.has_table("subcategories"):
+            existing_columns = {column["name"] for column in inspector.get_columns("subcategories")}
+            if "image" not in existing_columns:
+                connection.execute(text("ALTER TABLE subcategories ADD COLUMN image TEXT NULL"))
+
+        if inspector.has_table("categories"):
+            existing_columns = {column["name"] for column in inspector.get_columns("categories")}
+            if "image" not in existing_columns:
+                connection.execute(text("ALTER TABLE categories ADD COLUMN image TEXT NULL"))
+
 
 def ensure_default_subcategories() -> None:
     db: Session = SessionLocal()

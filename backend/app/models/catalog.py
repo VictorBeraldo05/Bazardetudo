@@ -28,6 +28,7 @@ class Subcategory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(80), index=True)
     slug: Mapped[str] = mapped_column(String(80), unique=True, index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     category: Mapped["Category"] = relationship(back_populates="subcategories")
     products: Mapped[list["Product"]] = relationship(back_populates="subcategory")

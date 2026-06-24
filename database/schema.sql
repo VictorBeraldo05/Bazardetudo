@@ -29,6 +29,7 @@ CREATE TABLE categories (
   name VARCHAR(80) NOT NULL UNIQUE,
   slug VARCHAR(80) NOT NULL UNIQUE,
   description TEXT,
+  image TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -39,6 +40,7 @@ CREATE TABLE subcategories (
   name VARCHAR(80) NOT NULL,
   slug VARCHAR(80) NOT NULL UNIQUE,
   description TEXT,
+  image TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

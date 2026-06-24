@@ -476,7 +476,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                             name: subcategory.name,
                             slug: subcategory.slug,
                             description: subcategory.description ?? "",
-                            image: (subcategory as any).image ?? null
+                            image: subcategory.image ?? null
                           });
                           setSubcategorySlugEdited(true);
                         }}

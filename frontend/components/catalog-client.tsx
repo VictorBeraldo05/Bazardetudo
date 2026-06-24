@@ -75,7 +75,7 @@ export function CatalogClient({
 
     return (activeCategory.subcategories ?? []).map((subcategory) => ({
       ...subcategory,
-      image: (subcategory as any).image ?? pickSubcategoryImage(products, activeCategory.name, subcategory.name),
+      image: subcategory.image ?? pickSubcategoryImage(products, activeCategory.name, subcategory.name),
       count: products.filter(
         (product) =>
           normalizeText(product.category) === normalizeText(activeCategory.name) &&
