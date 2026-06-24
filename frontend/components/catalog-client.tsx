@@ -201,7 +201,7 @@ export function CatalogClient({
                       <div className={`relative mx-auto h-[3.5rem] w-[3.5rem] overflow-hidden rounded-full border ${
                         isActive ? "border-[#2f6ce5]" : "border-black/8"
                       } bg-[#f4f1ea]`}>
-                        <Image src={subcategory.image} alt={subcategory.name} fill className="object-cover" />
+                        <Image src={subcategory.image} alt={subcategory.name} fill className="object-contain p-1.5" />
                       </div>
                       <p className={`mt-1.5 line-clamp-2 text-[10px] font-medium leading-3 ${isActive ? "text-[#2f6ce5]" : "text-black"}`}>
                         {subcategory.name}
@@ -311,7 +311,7 @@ export function CatalogClient({
                     }`}
                   >
                     <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-[#f4f1ea]">
-                      <Image src={subcategory.image} alt={subcategory.name} fill className="object-cover" />
+                      <Image src={subcategory.image} alt={subcategory.name} fill className="object-contain p-1.5" />
                     </div>
                     <div className="min-w-0">
                       <p className="line-clamp-2 font-semibold text-black">{subcategory.name}</p>
