@@ -190,20 +190,6 @@ export function CatalogClient({
               </div>
 
               <div className="-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1">
-                <Link
-                  href={activeCategory ? `/catalogo/categoria/${activeCategory.slug}` : "/catalogo"}
-                  className="w-[72px] flex-shrink-0 text-center"
-                >
-                  <div className={`mx-auto flex h-[3.5rem] w-[3.5rem] items-center justify-center rounded-full border ${
-                    activeSubcategoryId === "all" ? "border-[#2f6ce5] bg-[#eef4ff]" : "border-black/8 bg-[#f6f4ef]"
-                  }`}>
-                    <span className="text-[9px] font-semibold uppercase tracking-[0.14em]">Tudo</span>
-                  </div>
-                  <p className={`mt-1.5 line-clamp-2 text-[10px] font-medium leading-3 ${activeSubcategoryId === "all" ? "text-[#2f6ce5]" : "text-black"}`}>
-                    Ver tudo
-                  </p>
-                </Link>
-
                 {subcategoryTiles.map((subcategory) => {
                   const isActive = activeSubcategoryId === subcategory.id;
                   return (
@@ -223,6 +209,12 @@ export function CatalogClient({
                     </Link>
                   );
                 })}
+
+                {subcategoryTiles.length === 0 ? (
+                  <div className="flex min-h-[4.8rem] items-center rounded-[1rem] border border-dashed border-black/10 px-3 text-[11px] text-black/45">
+                    Nenhuma subcategoria cadastrada nessa categoria.
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -308,21 +300,6 @@ export function CatalogClient({
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <Link
-                href={activeCategory ? `/catalogo/categoria/${activeCategory.slug}` : "/catalogo"}
-                className={`flex items-center gap-3 rounded-[1.25rem] border p-3 text-left ${
-                  activeSubcategoryId === "all" ? "border-[#b4885a] bg-[#faf5ee]" : "border-black/8 bg-white"
-                }`}
-              >
-                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-[#f2ece2]">
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">Tudo</span>
-                </div>
-                <div>
-                  <p className="font-semibold text-black">Todos os itens</p>
-                  <p className="text-sm text-black/45">Visao geral</p>
-                </div>
-              </Link>
-
               {subcategoryTiles.map((subcategory) => {
                 const isActive = activeSubcategoryId === subcategory.id;
                 return (
@@ -343,6 +320,12 @@ export function CatalogClient({
                   </Link>
                 );
               })}
+
+              {subcategoryTiles.length === 0 ? (
+                <div className="flex min-h-[120px] items-center justify-center rounded-[1.25rem] border border-dashed border-black/10 bg-[#fcfbf8] px-4 text-center text-sm text-black/45 sm:col-span-2 xl:col-span-4">
+                  Nenhuma subcategoria cadastrada nessa categoria.
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
