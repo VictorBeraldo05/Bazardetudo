@@ -116,6 +116,28 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
     setSubcategorySlugEdited(false);
   }
 
+  function startEditCategory(category: Category) {
+    setEditingCategoryId(category.id);
+    setCategoryForm({
+      name: category.name,
+      slug: category.slug,
+      description: category.description ?? ""
+    });
+    setCategorySlugEdited(true);
+  }
+
+  function startEditSubcategory(category: Category, subcategory: NonNullable<Category["subcategories"]>[number]) {
+    setEditingSubcategoryId(subcategory.id);
+    setSubcategoryForm({
+      categoryId: category.id,
+      name: subcategory.name,
+      slug: subcategory.slug,
+      description: subcategory.description ?? "",
+      image: subcategory.image ?? null
+    });
+    setSubcategorySlugEdited(true);
+  }
+
   async function handleCategorySubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
@@ -430,86 +452,105 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
               <div>
                 <p className="text-sm uppercase tracking-[0.24em] text-black/45">Mapa da loja</p>
                 <h2 className="text-2xl font-semibold text-black">Estrutura cadastrada</h2>
+                <p className="mt-1 text-sm text-black/50">Gerencie a arvore da loja em uma lista mais pratica, com acoes por linha.</p>
               </div>
               <Button type="button" variant="outline" onClick={loadCategories}>Atualizar</Button>
             </div>
 
             <div className="mt-5 space-y-4">
               {categories.map((category) => (
-                <div key={category.id} className="rounded-[1.5rem] bg-[#f6f2eb] p-4">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                    <div>
-                      <p className="font-semibold text-black">{category.name}</p>
-                      <p className="mt-1 text-sm text-black/50">{category.slug}</p>
-                      {category.description ? <p className="mt-2 text-sm text-black/58">{category.description}</p> : null}
+                <div key={category.id} className="overflow-hidden rounded-[1.5rem] border border-black/6 bg-[#fbfaf7]">
+                  <div className="flex flex-col gap-4 border-b border-black/6 px-4 py-4 lg:flex-row lg:items-start lg:justify-between lg:px-5">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-lg font-semibold text-black">{category.name}</p>
+                        <span className="rounded-full bg-white px-2.5 py-1 text-xs text-black/55">
+                          {(category.subcategories?.length ?? 0)} subcategorias
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-black/45">{category.slug}</p>
+                      {category.description ? <p className="mt-2 max-w-2xl text-sm leading-6 text-black/58">{category.description}</p> : null}
                     </div>
-                    <div className="flex flex-wrap gap-4 text-sm">
+
+                    <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        onClick={() => {
-                          setEditingCategoryId(category.id);
-                          setCategoryForm({
-                            name: category.name,
-                            slug: category.slug,
-                            description: category.description ?? ""
-                          });
-                          setCategorySlugEdited(true);
-                        }}
-                        className="font-medium text-black"
+                        onClick={() => startEditCategory(category)}
+                        className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-[#f4efe7]"
                       >
-                        Editar
+                        Editar categoria
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDelete("category", category.id)}
                         disabled={deletingId === category.id}
-                        className="font-medium text-[#b13f2b] disabled:opacity-60"
+                        className="rounded-full border border-[#d87b65]/20 bg-[#fff4f1] px-4 py-2 text-sm font-medium text-[#b13f2b] transition hover:bg-[#fde8e2] disabled:opacity-60"
                       >
-                        {deletingId === category.id ? "Excluindo..." : "Excluir"}
+                        {deletingId === category.id ? "Excluindo..." : "Excluir categoria"}
                       </button>
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {(category.subcategories ?? []).map((subcategory) => (
-                      <button
-                        key={subcategory.id}
-                        type="button"
-                        onClick={() => {
-                          setEditingSubcategoryId(subcategory.id);
-                          setSubcategoryForm({
-                            categoryId: category.id,
-                            name: subcategory.name,
-                            slug: subcategory.slug,
-                            description: subcategory.description ?? "",
-                            image: subcategory.image ?? null
-                          });
-                          setSubcategorySlugEdited(true);
-                        }}
-                        className="rounded-full border border-black/10 bg-white px-3 py-2 text-sm text-black transition hover:bg-[#f1ece3]"
-                      >
-                        {subcategory.name}
-                      </button>
-                    ))}
-                  </div>
-
-                  {(category.subcategories ?? []).length > 0 ? (
-                    <div className="mt-3 flex flex-wrap gap-3 text-sm">
-                      {(category.subcategories ?? []).map((subcategory) => (
-                        <button
-                          key={`${subcategory.id}-delete`}
-                          type="button"
-                          onClick={() => handleDelete("subcategory", subcategory.id)}
-                          disabled={deletingId === subcategory.id}
-                          className="text-[#b13f2b] disabled:opacity-60"
-                        >
-                          {deletingId === subcategory.id ? `Excluindo ${subcategory.name}...` : `Excluir ${subcategory.name}`}
-                        </button>
-                      ))}
+                  <div className="px-4 py-4 lg:px-5">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="text-xs uppercase tracking-[0.22em] text-black/38">Subcategorias</p>
+                      {(category.subcategories?.length ?? 0) > 0 ? (
+                        <p className="text-xs text-black/40">Use editar para carregar a subcategoria no formulario.</p>
+                      ) : null}
                     </div>
-                  ) : (
-                    <p className="mt-3 text-sm text-black/45">Nenhuma subcategoria cadastrada ainda.</p>
-                  )}
+
+                    {(category.subcategories ?? []).length > 0 ? (
+                      <div className="space-y-2">
+                        {(category.subcategories ?? []).map((subcategory) => (
+                          <div
+                            key={subcategory.id}
+                            className="flex flex-col gap-3 rounded-[1.1rem] border border-black/6 bg-white px-3 py-3 md:flex-row md:items-center md:justify-between"
+                          >
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f4f1ea]">
+                                {subcategory.image ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={subcategory.image} alt={subcategory.name} className="h-full w-full object-contain p-1.5" />
+                                ) : (
+                                  <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-black/35">Sem</span>
+                                )}
+                              </div>
+
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-black">{subcategory.name}</p>
+                                <p className="truncate text-xs text-black/42">{subcategory.slug}</p>
+                                {subcategory.description ? (
+                                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-black/55">{subcategory.description}</p>
+                                ) : null}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 md:justify-end">
+                              <button
+                                type="button"
+                                onClick={() => startEditSubcategory(category, subcategory)}
+                                className="rounded-full border border-black/10 bg-white px-3 py-2 text-sm font-medium text-black transition hover:bg-[#f4efe7]"
+                              >
+                                Editar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete("subcategory", subcategory.id)}
+                                disabled={deletingId === subcategory.id}
+                                className="rounded-full border border-[#d87b65]/20 bg-[#fff4f1] px-3 py-2 text-sm font-medium text-[#b13f2b] transition hover:bg-[#fde8e2] disabled:opacity-60"
+                              >
+                                {deletingId === subcategory.id ? "Excluindo..." : "Excluir"}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-[1.1rem] border border-dashed border-black/10 bg-white px-4 py-6 text-sm text-black/45">
+                        Nenhuma subcategoria cadastrada ainda.
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
 
