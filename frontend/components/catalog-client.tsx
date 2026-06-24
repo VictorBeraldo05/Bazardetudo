@@ -131,7 +131,7 @@ export function CatalogClient({
             </div>
           </div>
 
-          <div className="grid grid-cols-[104px_minmax(0,1fr)]">
+          <div className="grid grid-cols-[116px_minmax(0,1fr)]">
             <div className="border-r border-black/6 bg-[#f7f4ee]">
               {categories.map((category) => {
                 const isActive = category.id === activeCategory?.id;
@@ -148,7 +148,7 @@ export function CatalogClient({
                     }`}
                   >
                     {isActive ? <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full bg-[#2f6ce5]" /> : null}
-                    <span className="pl-2">{category.name}</span>
+                    <span className="pl-2 break-words [overflow-wrap:anywhere]">{category.name}</span>
                   </button>
                 );
               })}
@@ -189,21 +189,21 @@ export function CatalogClient({
                 </select>
               </div>
 
-              <div className="-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1">
+              <div className="mt-4 grid grid-cols-3 gap-x-2 gap-y-3">
                 {subcategoryTiles.map((subcategory) => {
                   const isActive = activeSubcategoryId === subcategory.id;
                   return (
                     <Link
                       key={subcategory.id}
                       href={`/catalogo/subcategoria/${subcategory.slug}`}
-                      className="w-[72px] flex-shrink-0 text-center"
+                      className="min-w-0 text-center"
                     >
                       <div className={`relative mx-auto h-[3.5rem] w-[3.5rem] overflow-hidden rounded-full border ${
                         isActive ? "border-[#2f6ce5]" : "border-black/8"
                       } bg-[#f4f1ea]`}>
                         <Image src={subcategory.image} alt={subcategory.name} fill className="object-contain p-1.5" />
                       </div>
-                      <p className={`mt-1.5 line-clamp-2 text-[10px] font-medium leading-3 ${isActive ? "text-[#2f6ce5]" : "text-black"}`}>
+                      <p className={`mt-1.5 line-clamp-2 break-words text-[10px] font-medium leading-3 [overflow-wrap:anywhere] ${isActive ? "text-[#2f6ce5]" : "text-black"}`}>
                         {subcategory.name}
                       </p>
                     </Link>
@@ -211,7 +211,7 @@ export function CatalogClient({
                 })}
 
                 {subcategoryTiles.length === 0 ? (
-                  <div className="flex min-h-[4.8rem] items-center rounded-[1rem] border border-dashed border-black/10 px-3 text-[11px] text-black/45">
+                  <div className="col-span-3 flex min-h-[4.8rem] items-center rounded-[1rem] border border-dashed border-black/10 px-3 text-[11px] text-black/45">
                     Nenhuma subcategoria cadastrada nessa categoria.
                   </div>
                 ) : null}
