@@ -307,10 +307,10 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
 
   return (
     <main className="space-y-6">
-      <section className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
+      <section className="rounded-[1.5rem] border border-black/5 bg-white p-5 shadow-card sm:rounded-[2rem] sm:p-6">
         <p className="text-sm uppercase tracking-[0.24em] text-black/45">Estrutura do catalogo</p>
-        <h1 className="mt-2 font-display text-4xl text-black">Categorias e subcategorias</h1>
-        <p className="mt-3 max-w-3xl text-sm text-black/60">
+        <h1 className="mt-2 font-display text-[2rem] leading-tight text-black sm:text-4xl">Categorias e subcategorias</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-black/60">
           Organize a navegacao da loja e vincule os produtos corretamente no catalogo mobile e desktop.
         </p>
       </section>
@@ -321,16 +321,16 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
           { label: "Subcategorias", value: totalSubcategories, hint: "Niveis secundarios de navegacao" },
           { label: "Categorias com itens", value: categories.filter((category) => (category.subcategories?.length ?? 0) > 0).length, hint: "Prontas para a vitrine" }
         ].map((item) => (
-          <div key={item.label} className="rounded-[1.6rem] border border-black/5 bg-white p-5 shadow-card">
+          <div key={item.label} className="rounded-[1.2rem] border border-black/5 bg-white p-4 shadow-card sm:rounded-[1.6rem] sm:p-5">
             <p className="text-sm text-black/45">{item.label}</p>
-            <p className="mt-3 text-3xl font-semibold text-black">{item.value}</p>
-            <p className="mt-2 text-sm text-black/55">{item.hint}</p>
+            <p className="mt-2 text-[1.85rem] font-semibold leading-none text-black sm:mt-3 sm:text-3xl">{item.value}</p>
+            <p className="mt-2 text-xs leading-5 text-black/55 sm:text-sm">{item.hint}</p>
           </div>
         ))}
       </section>
 
       <div className="grid items-start gap-6 xl:grid-cols-[380px_380px_minmax(0,1fr)]">
-        <section className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
+        <section className="rounded-[1.5rem] border border-black/5 bg-white p-5 shadow-card sm:rounded-[2rem] sm:p-6">
           <div className="space-y-1">
             <p className="text-sm uppercase tracking-[0.24em] text-black/45">Categoria principal</p>
             <h2 className="text-2xl font-semibold text-black">{editingCategoryId ? "Editar categoria" : "Nova categoria"}</h2>
@@ -382,7 +382,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
           </form>
         </section>
 
-        <section className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
+        <section className="rounded-[1.5rem] border border-black/5 bg-white p-5 shadow-card sm:rounded-[2rem] sm:p-6">
           <div className="space-y-1">
             <p className="text-sm uppercase tracking-[0.24em] text-black/45">Subcategoria</p>
             <h2 className="text-2xl font-semibold text-black">{editingSubcategoryId ? "Editar subcategoria" : "Nova subcategoria"}</h2>
@@ -488,11 +488,11 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
         </section>
 
         <section className="space-y-6">
-          <section className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-card">
+          <section className="rounded-[1.5rem] border border-black/5 bg-white p-5 shadow-card sm:rounded-[2rem] sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <p className="text-sm uppercase tracking-[0.24em] text-black/45">Mapa da loja</p>
-                <h2 className="text-2xl font-semibold text-black">Estrutura cadastrada</h2>
+                <h2 className="text-[1.9rem] font-semibold leading-tight text-black sm:text-2xl">Estrutura cadastrada</h2>
                 <p className="mt-1 max-w-md text-sm leading-6 text-black/50">Selecione exatamente o item que quer manter, editar ou excluir.</p>
               </div>
               <Button type="button" variant="outline" onClick={loadCategories} className="w-full sm:w-auto">Atualizar</Button>
@@ -506,7 +506,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                     <select
                       value={managementMode}
                       onChange={(event) => setManagementMode(event.target.value as "category" | "subcategory")}
-                      className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3 text-sm"
+                      className="w-full min-w-0 rounded-[1.1rem] border border-black/10 px-4 py-3 text-sm sm:rounded-2xl"
                     >
                       <option value="category">Categoria</option>
                       <option value="subcategory">Subcategoria</option>
@@ -518,7 +518,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                     <select
                       value={selectedCategoryId}
                       onChange={(event) => setSelectedCategoryId(event.target.value)}
-                      className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3 text-sm"
+                      className="w-full min-w-0 rounded-[1.1rem] border border-black/10 px-4 py-3 text-sm sm:rounded-2xl"
                     >
                       {categories.map((category) => (
                         <option key={category.id} value={category.id}>
@@ -535,7 +535,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                     <select
                       value={selectedSubcategoryId}
                       onChange={(event) => setSelectedSubcategoryId(event.target.value)}
-                      className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3 text-sm"
+                      className="w-full min-w-0 rounded-[1.1rem] border border-black/10 px-4 py-3 text-sm sm:rounded-2xl"
                       disabled={!selectedCategory || (selectedCategory.subcategories?.length ?? 0) === 0}
                     >
                       {(selectedCategory?.subcategories ?? []).length > 0 ? (
@@ -552,9 +552,9 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                 ) : null}
 
                 {managementMode === "category" && selectedCategory ? (
-                  <div className="rounded-[1.5rem] border border-black/6 bg-[#fbfaf7] p-4 sm:p-5">
+                  <div className="rounded-[1.2rem] border border-black/6 bg-[#fbfaf7] p-4 sm:rounded-[1.5rem] sm:p-5">
                     <p className="text-xs uppercase tracking-[0.22em] text-black/38">Categoria selecionada</p>
-                    <h3 className="mt-2 break-words text-xl font-semibold text-black sm:text-2xl">{selectedCategory.name}</h3>
+                    <h3 className="mt-2 break-words text-[1.55rem] font-semibold leading-tight text-black sm:text-2xl">{selectedCategory.name}</h3>
                     <p className="mt-1 text-sm text-black/45">{selectedCategory.slug}</p>
                     {selectedCategory.description ? <p className="mt-3 text-sm leading-6 text-black/58">{selectedCategory.description}</p> : null}
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -567,7 +567,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                       <button
                         type="button"
                         onClick={() => startEditCategory(selectedCategory)}
-                        className="min-h-12 rounded-[1.25rem] border border-black/10 bg-white px-4 py-3 text-sm font-medium leading-5 text-black transition hover:bg-[#f4efe7]"
+                        className="min-h-11 rounded-[1rem] border border-black/10 bg-white px-4 py-3 text-sm font-medium leading-5 text-black transition hover:bg-[#f4efe7] sm:min-h-12 sm:rounded-[1.25rem]"
                       >
                         Editar categoria selecionada
                       </button>
@@ -575,7 +575,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                         type="button"
                         onClick={() => handleDelete("category", selectedCategory.id)}
                         disabled={deletingId === selectedCategory.id}
-                        className="min-h-12 rounded-[1.25rem] border border-[#d87b65]/20 bg-[#fff4f1] px-4 py-3 text-sm font-medium leading-5 text-[#b13f2b] transition hover:bg-[#fde8e2] disabled:opacity-60"
+                        className="min-h-11 rounded-[1rem] border border-[#d87b65]/20 bg-[#fff4f1] px-4 py-3 text-sm font-medium leading-5 text-[#b13f2b] transition hover:bg-[#fde8e2] disabled:opacity-60 sm:min-h-12 sm:rounded-[1.25rem]"
                       >
                         {deletingId === selectedCategory.id ? "Excluindo..." : "Excluir categoria selecionada"}
                       </button>
@@ -585,9 +585,9 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
 
                 {managementMode === "subcategory" ? (
                   selectedSubcategory && selectedCategory ? (
-                    <div className="rounded-[1.5rem] border border-black/6 bg-[#fbfaf7] p-4 sm:p-5">
+                    <div className="rounded-[1.2rem] border border-black/6 bg-[#fbfaf7] p-4 sm:rounded-[1.5rem] sm:p-5">
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f4f1ea]">
+                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f4f1ea] sm:h-16 sm:w-16">
                           {selectedSubcategory.image ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={selectedSubcategory.image} alt={selectedSubcategory.name} className="h-full w-full object-contain p-2" />
@@ -598,7 +598,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
 
                         <div className="min-w-0">
                           <p className="text-xs uppercase tracking-[0.22em] text-black/38">Subcategoria selecionada</p>
-                          <h3 className="mt-2 break-words text-xl font-semibold text-black sm:text-2xl">{selectedSubcategory.name}</h3>
+                          <h3 className="mt-2 break-words text-[1.55rem] font-semibold leading-tight text-black sm:text-2xl">{selectedSubcategory.name}</h3>
                           <p className="mt-1 text-sm text-black/45">{selectedSubcategory.slug}</p>
                           <p className="mt-1 text-sm text-black/50">Categoria mae: {selectedCategory.name}</p>
                           {selectedSubcategory.description ? (
@@ -611,7 +611,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                         <button
                           type="button"
                           onClick={() => startEditSubcategory(selectedCategory, selectedSubcategory)}
-                          className="min-h-12 rounded-[1.25rem] border border-black/10 bg-white px-4 py-3 text-sm font-medium leading-5 text-black transition hover:bg-[#f4efe7]"
+                          className="min-h-11 rounded-[1rem] border border-black/10 bg-white px-4 py-3 text-sm font-medium leading-5 text-black transition hover:bg-[#f4efe7] sm:min-h-12 sm:rounded-[1.25rem]"
                         >
                           Editar subcategoria selecionada
                         </button>
@@ -619,7 +619,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                           type="button"
                           onClick={() => handleDelete("subcategory", selectedSubcategory.id)}
                           disabled={deletingId === selectedSubcategory.id}
-                          className="min-h-12 rounded-[1.25rem] border border-[#d87b65]/20 bg-[#fff4f1] px-4 py-3 text-sm font-medium leading-5 text-[#b13f2b] transition hover:bg-[#fde8e2] disabled:opacity-60"
+                          className="min-h-11 rounded-[1rem] border border-[#d87b65]/20 bg-[#fff4f1] px-4 py-3 text-sm font-medium leading-5 text-[#b13f2b] transition hover:bg-[#fde8e2] disabled:opacity-60 sm:min-h-12 sm:rounded-[1.25rem]"
                         >
                           {deletingId === selectedSubcategory.id ? "Excluindo..." : "Excluir subcategoria selecionada"}
                         </button>
