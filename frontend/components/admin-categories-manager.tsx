@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { Category } from "@/lib/api";
+import { optimizeImageForUpload } from "@/lib/image-upload";
 
 function createSlug(value: string) {
   return value
@@ -68,6 +69,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
     categoryId: initialCategories[0]?.id ?? ""
   });
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadStage, setUploadStage] = useState<"idle" | "optimizing" | "uploading">("idle");
   const [categorySlugEdited, setCategorySlugEdited] = useState(false);
   const [subcategorySlugEdited, setSubcategorySlugEdited] = useState(false);
 
@@ -189,12 +191,15 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
   async function handleImageSelect(file?: File | null) {
     if (!file) return;
     setUploadingImage(true);
+    setUploadStage("optimizing");
     setMessage(null);
     try {
+      const optimizedFile = await optimizeImageForUpload(file, { maxDimension: 640, quality: 0.8 });
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", optimizedFile);
       form.append("slug", subcategoryForm.slug || "subcategory");
 
+      setUploadStage("uploading");
       const response = await fetch("/api/admin/uploads/products", { method: "POST", body: form });
       const result = await response.json().catch(() => null);
       if (!response.ok) {
@@ -207,6 +212,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       setMessage(error instanceof Error ? error.message : "Erro ao enviar imagem.");
     } finally {
       setUploadingImage(false);
+      setUploadStage("idle");
     }
   }
 
@@ -385,7 +391,7 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
                       onChange={(e) => handleImageSelect(e.target.files?.[0] ?? null)}
                       className="hidden"
                     />
-                    {uploadingImage ? "Enviando..." : "Escolher imagem"}
+                    {uploadingImage ? (uploadStage === "optimizing" ? "Preparando..." : "Enviando...") : "Escolher imagem"}
                   </label>
                   {subcategoryForm.image ? (
                     <button

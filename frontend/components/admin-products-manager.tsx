@@ -7,6 +7,7 @@ import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { hasRealCategoryIds, type Category } from "@/lib/api";
 import type { Product } from "@/lib/data";
+import { optimizeImageForUpload } from "@/lib/image-upload";
 import { money } from "@/lib/utils";
 
 function createSlug(value: string) {
@@ -171,6 +172,7 @@ export function AdminProductsManager({
   const [editingLoading, setEditingLoading] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadStage, setUploadStage] = useState<"idle" | "optimizing" | "uploading">("idle");
   const [filter, setFilter] = useState("todos");
   const [query, setQuery] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
@@ -256,10 +258,13 @@ export function AdminProductsManager({
       return preview && /^https?:\/\//i.test(preview) ? preview : null;
     }
 
+    setUploadStage("optimizing");
+    const optimizedFile = await optimizeImageForUpload(selectedFile, { maxDimension: 1400, quality: 0.82 });
     const uploadFormData = new FormData();
-    uploadFormData.append("file", selectedFile);
+    uploadFormData.append("file", optimizedFile);
     uploadFormData.append("slug", form.slug || form.name);
 
+    setUploadStage("uploading");
     const response = await fetch("/api/admin/uploads/products", {
       method: "POST",
       body: uploadFormData
@@ -305,6 +310,7 @@ export function AdminProductsManager({
     }
 
     setLoading(true);
+    setUploadStage("idle");
     setMessage(null);
 
     try {
@@ -343,6 +349,7 @@ export function AdminProductsManager({
       setMessage(error instanceof Error ? error.message : "Falha ao salvar produto.");
     } finally {
       setLoading(false);
+      setUploadStage("idle");
     }
   }
 
@@ -680,7 +687,15 @@ export function AdminProductsManager({
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button type="submit" disabled={loading || !canSubmit} className="sm:flex-1">
-            {loading ? "Salvando..." : editingId ? "Salvar alteracoes" : "Cadastrar produto"}
+            {loading
+              ? uploadStage === "optimizing"
+                ? "Preparando imagem..."
+                : uploadStage === "uploading"
+                  ? "Enviando imagem..."
+                  : "Salvando..."
+              : editingId
+                ? "Salvar alteracoes"
+                : "Cadastrar produto"}
           </Button>
           {editingId ? (
             <button
