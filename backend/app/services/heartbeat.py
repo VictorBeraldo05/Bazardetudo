@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from datetime import UTC, datetime
 from urllib.error import URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
@@ -32,6 +33,8 @@ def _resolve_health_url() -> str | None:
 
 
 def _ping_healthcheck(health_url: str) -> None:
+    tick_at = datetime.now(UTC).isoformat()
+    logger.info("[heartbeat] tick -> %s", tick_at)
     request = Request(
         health_url,
         headers={
@@ -43,11 +46,11 @@ def _ping_healthcheck(health_url: str) -> None:
 
     try:
         with urlopen(request, timeout=30) as response:
-            logger.info("[heartbeat] ping success -> %s (%s)", health_url, response.status)
+            logger.info("[heartbeat] ping success -> %s (%s) at %s", health_url, response.status, tick_at)
     except URLError as exc:
-        logger.warning("[heartbeat] ping failed -> %s (%s)", health_url, exc)
+        logger.warning("[heartbeat] ping failed -> %s (%s) at %s", health_url, exc, tick_at)
     except Exception as exc:  # noqa: BLE001
-        logger.exception("[heartbeat] ping error -> %s (%s)", health_url, exc)
+        logger.exception("[heartbeat] ping error -> %s (%s) at %s", health_url, exc, tick_at)
 
 
 def _heartbeat_loop() -> None:
@@ -57,7 +60,12 @@ def _heartbeat_loop() -> None:
         return
 
     interval_seconds = settings.heartbeat_interval_minutes * 60
-    logger.info("[heartbeat] started -> %s (every %s minutes)", health_url, settings.heartbeat_interval_minutes)
+    logger.info(
+        "[heartbeat] started -> %s (every %s minutes, interval=%ss)",
+        health_url,
+        settings.heartbeat_interval_minutes,
+        interval_seconds,
+    )
 
     while not _stop_event.is_set():
         _ping_healthcheck(health_url)
@@ -73,6 +81,13 @@ def start_heartbeat() -> None:
     if not settings.heartbeat_enabled:
         logger.info("[heartbeat] disabled by configuration")
         return
+
+    logger.info(
+        "[heartbeat] configuration -> enabled=%s, interval_minutes=%s, app_public_url=%s",
+        settings.heartbeat_enabled,
+        settings.heartbeat_interval_minutes,
+        settings.app_public_url,
+    )
 
     if _heartbeat_thread and _heartbeat_thread.is_alive():
         logger.info("[heartbeat] already running")
