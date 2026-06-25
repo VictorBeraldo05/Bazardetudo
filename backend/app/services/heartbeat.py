@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import logging
 import threading
-import time
 from urllib.error import URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from app.core.config import settings
@@ -18,7 +18,17 @@ _stop_event = threading.Event()
 def _resolve_health_url() -> str | None:
     if not settings.app_public_url:
         return None
-    return f"{settings.app_public_url}/health"
+
+    normalized = settings.app_public_url.strip()
+    parsed = urlparse(normalized)
+
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        if normalized.startswith("//"):
+            normalized = f"https:{normalized}"
+        else:
+            normalized = f"https://{normalized.lstrip('/')}"
+
+    return f"{normalized.rstrip('/')}/health"
 
 
 def _ping_healthcheck(health_url: str) -> None:

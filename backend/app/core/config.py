@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     smtp_from_name: str = "Bazar de Tudo"
     smtp_use_tls: bool = True
     app_public_url: str | None = None
-    heartbeat_enabled: bool = False
-    heartbeat_interval_minutes: int = 10
+    heartbeat_enabled: bool = True
+    heartbeat_interval_minutes: int = 8
     storefront_public_url: str | None = None
     whatsapp_instance_id: str | None = None
     whatsapp_instance_name: str | None = None
