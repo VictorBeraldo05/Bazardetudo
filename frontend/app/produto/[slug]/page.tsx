@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
 import { ProductActions } from "@/components/product-actions";
+import { ShareProductButton } from "@/components/share-product-button";
 import { getProductBySlug, getProducts } from "@/lib/api";
 import { ProductCard } from "@/components/product-card";
 import { money } from "@/lib/utils";
@@ -29,8 +30,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8">
-        <div className="relative aspect-square overflow-hidden rounded-[1.75rem] bg-[#f4efe7] md:rounded-[2rem]">
-          <Image src={product.image} alt={product.name} fill className="object-contain p-4 md:object-cover md:p-0" />
+        <div className="relative">
+          <div className="absolute right-3 top-3 z-10 md:right-4 md:top-4">
+            <ShareProductButton />
+          </div>
+          <div className="relative aspect-square overflow-hidden rounded-[1.75rem] bg-[#f4efe7] md:rounded-[2rem]">
+            <Image src={product.image} alt={product.name} fill className="object-contain p-4 md:object-cover md:p-0" />
+          </div>
         </div>
 
         <div className="space-y-5 md:space-y-6">

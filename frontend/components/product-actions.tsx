@@ -30,15 +30,21 @@ export function ProductActions({ product }: { product: Product }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-3">
-        <Button onClick={handleBuyNow} disabled={loading}>
+      <div className="grid gap-3">
+        <Button
+          onClick={handleBuyNow}
+          disabled={loading}
+          className="h-14 w-full rounded-[1.35rem] bg-[#e05a36] px-6 text-base font-semibold text-white shadow-[0_18px_30px_-20px_rgba(224,90,54,0.9)] transition hover:bg-[#d24f2a]"
+        >
           {loading ? "Reservando..." : "Comprar agora"}
         </Button>
-        <Button variant="outline" onClick={() => addItem(product)}>
+
+        <Button
+          variant="outline"
+          onClick={() => addItem(product)}
+          className="h-14 w-full rounded-[1.35rem] border-[#d8c4af] bg-[#fffaf3] px-6 text-base font-semibold text-[#7f5634] transition hover:bg-[#f8eddc]"
+        >
           Adicionar ao carrinho
-        </Button>
-        <Button variant="ghost" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`, "_blank")}>
-          Compartilhar no WhatsApp
         </Button>
       </div>
       {message ? <p className="text-sm text-red-600">{message}</p> : null}
