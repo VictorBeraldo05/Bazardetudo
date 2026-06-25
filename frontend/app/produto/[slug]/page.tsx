@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, ShieldCheck, Truck } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 import { ProductActions } from "@/components/product-actions";
 import { getProductBySlug, getProducts } from "@/lib/api";
@@ -77,35 +77,19 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <p className="mt-3 text-sm leading-7 text-black/65">{product.damageNotes}</p>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2 md:gap-4">
-            <div className="rounded-[1.5rem] bg-[#ede7de] p-4 md:p-5">
-              <div className="flex items-center gap-3">
-                <Truck size={18} />
-                <p className="font-semibold text-black">Entrega e retirada</p>
-              </div>
-              <p className="mt-3 text-sm text-black/60">Escolha no checkout entre receber ou retirar na loja.</p>
-            </div>
-            <div className="rounded-[1.5rem] bg-[#111111] p-4 text-white md:p-5">
-              <div className="flex items-center gap-3">
-                <ShieldCheck size={18} />
-                <p className="font-semibold">Reserva no checkout</p>
-              </div>
-              <p className="mt-3 text-sm text-white/72">Ao iniciar a compra, o produto fica reservado por um periodo limitado.</p>
-            </div>
-          </div>
-
           <ProductActions product={product} />
         </div>
       </div>
 
       <section>
         <div className="mb-5">
-          <p className="text-sm uppercase tracking-[0.24em] text-black/45">Voce tambem pode gostar</p>
-          <h2 className="mt-2 font-display text-3xl text-black">Mais oportunidades da vitrine</h2>
+          <h2 className="font-display text-2xl text-black md:text-3xl">Voce tambem pode gostar</h2>
         </div>
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
           {suggestions.map((item) => (
-            <ProductCard key={item.id} product={item} />
+            <div key={item.id} className="w-[12.5rem] min-w-[12.5rem] md:w-[14rem] md:min-w-[14rem]">
+              <ProductCard product={item} compact />
+            </div>
           ))}
         </div>
       </section>
