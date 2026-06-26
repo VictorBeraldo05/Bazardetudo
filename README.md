@@ -71,7 +71,7 @@ npm run dev
 - Para ativar no Render, configure:
   - `APP_PUBLIC_URL=https://bazardetudo.onrender.com`
   - `HEARTBEAT_ENABLED=true`
-  - `HEARTBEAT_INTERVAL_MINUTES=10`
+  - `HEARTBEAT_INTERVAL_MINUTES=8`
 - Quando ativo, a API faz um `GET` periÃ³dico em `APP_PUBLIC_URL/health`.
 - Importante: no plano gratuito isso ajuda a manter a instÃ¢ncia ativa enquanto ela estiver rodando, mas nÃ£o substitui totalmente um ping externo caso o serviÃ§o jÃ¡ tenha sido suspenso.
 
@@ -195,3 +195,15 @@ Mais detalhes em [docs/architecture.md](docs/architecture.md), [docs/deploy.md](
 
 - Se o bucket nao existir ou as variaveis do Supabase nao estiverem configuradas no Vercel, o cadastro do produto com imagem vai falhar na etapa de upload.
 - O backend continua recebendo apenas a URL final da imagem, entao o fluxo de cadastro do produto e o disparo do WhatsApp permanecem desacoplados do storage.
+
+## Descricao comercial com IA
+
+- O admin agora preenche uma descricao base imediatamente e tenta enriquecer o texto automaticamente conforme o nome do produto e digitado.
+- Se `OPENAI_API_KEY` estiver configurada no backend, a API gera uma versao mais comercial usando o modelo definido em `OPENAI_MODEL`.
+- Se a chave nao estiver configurada, o sistema continua funcionando com fallback interno, sem travar o cadastro.
+- O botao `Gerar com IA` permite sobrescrever manualmente a descricao atual com uma nova sugestao.
+
+### Variaveis de ambiente
+
+- `OPENAI_API_KEY=`
+- `OPENAI_MODEL=gpt-5-mini`

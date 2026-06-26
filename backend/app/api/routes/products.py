@@ -3,9 +3,16 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import admin_guard, db_session
-from app.models.catalog import Product, ProductImage
+from app.models.catalog import Category, Product, ProductImage, Subcategory
 from app.models.inventory import InventoryMovement
-from app.schemas.catalog import ProductCreate, ProductRead, ProductUpdate
+from app.schemas.catalog import (
+    ProductCreate,
+    ProductDescriptionSuggestionRequest,
+    ProductDescriptionSuggestionResponse,
+    ProductRead,
+    ProductUpdate,
+)
+from app.services.product_description_ai import create_fallback_product_description, generate_product_description
 from app.services.product_alerts import notify_matching_alerts
 from app.services.whatsapp_dispatch import enqueue_product_whatsapp_dispatch
 
@@ -36,6 +43,32 @@ def get_product_by_slug(slug: str, db: Session = Depends(db_session)) -> Product
     if not product:
         raise HTTPException(status_code=404, detail="Produto nao encontrado")
     return product
+
+
+@router.post(
+    "/suggest-description",
+    response_model=ProductDescriptionSuggestionResponse,
+    dependencies=[Depends(admin_guard)],
+)
+def suggest_product_description(
+    payload: ProductDescriptionSuggestionRequest,
+    db: Session = Depends(db_session),
+) -> ProductDescriptionSuggestionResponse:
+    category_name: str | None = None
+    subcategory_name: str | None = None
+
+    if payload.category_id:
+        category = db.get(Category, payload.category_id)
+        category_name = category.name if category else None
+
+    if payload.subcategory_id:
+        subcategory = db.get(Subcategory, payload.subcategory_id)
+        subcategory_name = subcategory.name if subcategory else None
+
+    fallback = create_fallback_product_description(payload.name, category_name, subcategory_name)
+    description = generate_product_description(payload.name, category_name, subcategory_name)
+    source = "ai" if description != fallback else "fallback"
+    return ProductDescriptionSuggestionResponse(description=description, source=source)
 
 
 @router.get("/{product_id}", response_model=ProductRead)

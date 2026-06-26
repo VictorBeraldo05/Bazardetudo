@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { hasRealCategoryIds, type Category } from "@/lib/api";
@@ -173,11 +173,14 @@ export function AdminProductsManager({
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadStage, setUploadStage] = useState<"idle" | "optimizing" | "uploading">("idle");
+  const [descriptionAiLoading, setDescriptionAiLoading] = useState(false);
+  const [descriptionAiSource, setDescriptionAiSource] = useState<"ai" | "fallback" | null>(null);
   const [filter, setFilter] = useState("todos");
   const [query, setQuery] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [skuTouched, setSkuTouched] = useState(false);
   const [descriptionTouched, setDescriptionTouched] = useState(false);
+  const descriptionRequestIdRef = useRef(0);
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const canSubmit = categories.length > 0 && hasRealCategoryIds(categories) && !loadError;
   const selectedCategory = useMemo(
@@ -211,6 +214,8 @@ export function AdminProductsManager({
     setSlugTouched(false);
     setSkuTouched(false);
     setDescriptionTouched(false);
+    setDescriptionAiLoading(false);
+    setDescriptionAiSource(null);
     setEditingId(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -251,7 +256,99 @@ export function AdminProductsManager({
       }
       return nextForm;
     });
+    if (!descriptionTouched) {
+      setDescriptionAiSource(null);
+    }
   }
+
+  async function requestSuggestedDescription(params?: {
+    name?: string;
+    categoryId?: string;
+    subcategoryId?: string;
+    overwrite?: boolean;
+  }) {
+    const name = params?.name ?? form.name;
+    const categoryId = params?.categoryId ?? form.categoryId;
+    const subcategoryId = params?.subcategoryId ?? form.subcategoryId;
+    const overwrite = params?.overwrite ?? false;
+    const trimmedName = name.trim();
+
+    if (trimmedName.length < 4) {
+      return;
+    }
+
+    if (!overwrite && descriptionTouched) {
+      return;
+    }
+
+    const requestId = descriptionRequestIdRef.current + 1;
+    descriptionRequestIdRef.current = requestId;
+    setDescriptionAiLoading(true);
+
+    try {
+      const response = await fetch("/api/admin/products/suggest-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmedName,
+          category_id: categoryId || null,
+          subcategory_id: subcategoryId || null
+        })
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (response.status === 401) {
+        router.push("/admin/login?next=/admin/produtos");
+        router.refresh();
+        throw new Error("Sua sessao administrativa expirou. Entre novamente para continuar.");
+      }
+
+      if (!response.ok || !result?.description) {
+        throw new Error(result?.detail ?? result?.message ?? "Nao foi possivel gerar a descricao.");
+      }
+
+      if (descriptionRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      setForm((current) => {
+        if (!overwrite && descriptionTouched) {
+          return current;
+        }
+        return { ...current, description: result.description };
+      });
+      setDescriptionAiSource(result.source === "ai" ? "ai" : "fallback");
+    } catch (error) {
+      if (descriptionRequestIdRef.current === requestId) {
+        setDescriptionAiSource(null);
+        setMessage(error instanceof Error ? error.message : "Nao foi possivel gerar a descricao.");
+      }
+    } finally {
+      if (descriptionRequestIdRef.current === requestId) {
+        setDescriptionAiLoading(false);
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (descriptionTouched) {
+      return;
+    }
+
+    const trimmedName = form.name.trim();
+    if (trimmedName.length < 4) {
+      setDescriptionAiLoading(false);
+      setDescriptionAiSource(null);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      void requestSuggestedDescription();
+    }, 900);
+
+    return () => window.clearTimeout(timeout);
+  }, [form.name, form.categoryId, form.subcategoryId, descriptionTouched]);
 
   async function uploadProductImage() {
     if (!selectedFile) {
@@ -391,6 +488,7 @@ export function AdminProductsManager({
       setSlugTouched(true);
       setSkuTouched(true);
       setDescriptionTouched(true);
+      setDescriptionAiSource(null);
       setEditingId(productId);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -492,7 +590,17 @@ export function AdminProductsManager({
         </div>
 
         <div className="space-y-2">
-          <FieldHelp label="Descricao comercial" help="Resumo curto que ajuda a vender. Vai aparecer para o cliente." />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <FieldHelp label="Descricao comercial" help="Resumo curto que ajuda a vender. Vai aparecer para o cliente." />
+            <button
+              type="button"
+              onClick={() => void requestSuggestedDescription({ overwrite: true })}
+              disabled={descriptionAiLoading || form.name.trim().length < 4}
+              className="h-10 rounded-full border border-black/10 px-4 text-sm font-medium text-black transition hover:bg-[#f5f1e8] disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              {descriptionAiLoading ? "Gerando..." : "Gerar com IA"}
+            </button>
+          </div>
           <textarea
             name="description"
             required
@@ -504,6 +612,15 @@ export function AdminProductsManager({
             placeholder="Descreva o produto, estilo, funcao e pontos fortes."
             className="min-h-28 w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3"
           />
+          <p className="text-xs text-black/45">
+            {descriptionAiLoading
+              ? "A IA esta montando uma descricao mais comercial com base no nome e na categoria."
+              : descriptionAiSource === "ai"
+                ? "Descricao enriquecida automaticamente pela IA."
+                : descriptionAiSource === "fallback"
+                  ? "Descricao automatica preenchida pelo modelo local da loja."
+                  : "A descricao continua editavel manualmente a qualquer momento."}
+          </p>
         </div>
 
         <div className="space-y-2">
@@ -527,6 +644,7 @@ export function AdminProductsManager({
               onChange={(event) => {
                 const nextCategoryId = event.target.value;
                 const categoryName = categories.find((category) => category.id === nextCategoryId)?.name ?? "";
+                setDescriptionAiSource(null);
                 setForm((current) => ({
                   ...current,
                   categoryId: nextCategoryId,
@@ -549,7 +667,10 @@ export function AdminProductsManager({
             <select
               name="subcategory_id"
               value={form.subcategoryId}
-              onChange={(event) => updateForm("subcategoryId", event.target.value)}
+              onChange={(event) => {
+                setDescriptionAiSource(null);
+                updateForm("subcategoryId", event.target.value);
+              }}
               disabled={!selectedCategory || currentSubcategories.length === 0}
               className="w-full min-w-0 rounded-2xl border border-black/10 px-4 py-3 disabled:bg-[#f7f5f1] disabled:text-black/35"
             >

@@ -98,6 +98,17 @@ class ProductUpdate(BaseModel):
     image_alt_text: str | None = None
 
 
+class ProductDescriptionSuggestionRequest(BaseModel):
+    name: str
+    category_id: str | None = None
+    subcategory_id: str | None = None
+
+
+class ProductDescriptionSuggestionResponse(BaseModel):
+    description: str
+    source: str
+
+
 class ProductRead(TimestampSchema):
     name: str
     slug: str

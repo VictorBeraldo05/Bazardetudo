@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     heartbeat_enabled: bool = True
     heartbeat_interval_minutes: int = 8
     storefront_public_url: str | None = None
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-5-mini"
     whatsapp_instance_id: str | None = None
     whatsapp_instance_name: str | None = None
     whatsapp_session_name: str = "default"
@@ -78,13 +80,20 @@ class Settings(BaseSettings):
         normalized = value.strip().rstrip("/")
         return normalized or None
 
-    @field_validator("whatsapp_instance_id", "whatsapp_instance_name", mode="before")
+    @field_validator("openai_api_key", "whatsapp_instance_id", "whatsapp_instance_name", mode="before")
     @classmethod
     def normalize_instance_name(cls, value: str | None) -> str | None:
         if value is None:
             return None
         normalized = value.strip()
         return normalized or None
+
+    @field_validator("openai_model", mode="before")
+    @classmethod
+    def normalize_openai_model(cls, value: str | None) -> str:
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        return "gpt-5-mini"
 
     @field_validator("whatsapp_session_name", mode="before")
     @classmethod
