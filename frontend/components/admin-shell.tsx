@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { BarChart3, FolderTree, LogOut, Package2, Settings, ShoppingBag, Warehouse } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
+import { NavigationLink } from "@/components/navigation-link";
+import { useNavigationFeedback } from "@/components/navigation-feedback-provider";
+import { useToast } from "@/components/toast-provider";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -18,9 +20,17 @@ const items = [
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { startNavigation } = useNavigationFeedback();
+  const { showToast } = useToast();
 
   async function logout() {
     await fetch("/api/admin/logout", { method: "POST" });
+    showToast({
+      tone: "info",
+      title: "Sessao encerrada",
+      description: "Voltando para o login administrativo."
+    });
+    startNavigation("/admin/login");
     router.push("/admin/login");
     router.refresh();
   }
@@ -39,7 +49,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               const Icon = item.icon;
               const active = pathname === item.href;
               return (
-                <Link
+                <NavigationLink
                   key={item.href}
                   href={item.href}
                   className={cn(
@@ -49,7 +59,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 >
                   <Icon size={18} />
                   {item.label}
-                </Link>
+                </NavigationLink>
               );
             })}
           </nav>

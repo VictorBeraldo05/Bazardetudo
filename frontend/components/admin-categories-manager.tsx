@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { useToast } from "@/components/toast-provider";
 import { Button } from "@/components/ui/button";
 import type { Category } from "@/lib/api";
 import { optimizeImageForUpload } from "@/lib/image-upload";
@@ -57,6 +58,7 @@ const EMPTY_SUBCATEGORY_FORM: SubcategoryForm = {
 };
 
 export function AdminCategoriesManager({ initialCategories }: { initialCategories: Category[] }) {
+  const { showToast } = useToast();
   const [categories, setCategories] = useState(initialCategories);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -114,7 +116,9 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
         categoryId: current.categoryId || result[0]?.id || ""
       }));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Nao foi possivel carregar as categorias.");
+      const text = error instanceof Error ? error.message : "Nao foi possivel carregar as categorias.";
+      setMessage(text);
+      showToast({ tone: "error", title: "Falha ao carregar categorias", description: text });
     }
   }
 
@@ -200,8 +204,15 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       await loadCategories();
       resetCategoryForm();
       setMessage(editingCategoryId ? "Categoria atualizada com sucesso." : "Categoria criada com sucesso.");
+      showToast({
+        tone: "success",
+        title: editingCategoryId ? "Categoria atualizada" : "Categoria criada",
+        description: categoryForm.name
+      });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Nao foi possivel salvar a categoria.");
+      const text = error instanceof Error ? error.message : "Nao foi possivel salvar a categoria.";
+      setMessage(text);
+      showToast({ tone: "error", title: "Falha ao salvar categoria", description: text });
     } finally {
       setLoading(false);
     }
@@ -244,8 +255,15 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       await loadCategories();
       resetSubcategoryForm();
       setMessage(editingSubcategoryId ? "Subcategoria atualizada com sucesso." : "Subcategoria criada com sucesso.");
+      showToast({
+        tone: "success",
+        title: editingSubcategoryId ? "Subcategoria atualizada" : "Subcategoria criada",
+        description: subcategoryForm.name
+      });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Nao foi possivel salvar a subcategoria.");
+      const text = error instanceof Error ? error.message : "Nao foi possivel salvar a subcategoria.";
+      setMessage(text);
+      showToast({ tone: "error", title: "Falha ao salvar subcategoria", description: text });
     } finally {
       setLoading(false);
     }
@@ -271,8 +289,11 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
       // result.publicUrl expected
       setSubcategoryForm((current) => ({ ...current, image: result.publicUrl }));
       setMessage("Imagem enviada com sucesso.");
+      showToast({ tone: "success", title: "Imagem enviada", description: "Icone da subcategoria atualizado." });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Erro ao enviar imagem.");
+      const text = error instanceof Error ? error.message : "Erro ao enviar imagem.";
+      setMessage(text);
+      showToast({ tone: "error", title: "Falha ao enviar imagem", description: text });
     } finally {
       setUploadingImage(false);
       setUploadStage("idle");
@@ -298,8 +319,15 @@ export function AdminCategoriesManager({ initialCategories }: { initialCategorie
         resetSubcategoryForm();
       }
       setMessage(target === "category" ? "Categoria excluida com sucesso." : "Subcategoria excluida com sucesso.");
+      showToast({
+        tone: "success",
+        title: target === "category" ? "Categoria excluida" : "Subcategoria excluida",
+        description: "Estrutura removida com sucesso."
+      });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Nao foi possivel excluir.");
+      const text = error instanceof Error ? error.message : "Nao foi possivel excluir.";
+      setMessage(text);
+      showToast({ tone: "error", title: "Falha ao excluir", description: text });
     } finally {
       setDeletingId(null);
     }

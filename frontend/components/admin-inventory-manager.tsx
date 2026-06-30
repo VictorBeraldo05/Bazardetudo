@@ -3,6 +3,7 @@
 import { Boxes, PackageCheck, PackagePlus, Search, ShoppingBag, Warehouse } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useToast } from "@/components/toast-provider";
 import { Button } from "@/components/ui/button";
 import { money } from "@/lib/utils";
 
@@ -64,6 +65,7 @@ export function AdminInventoryManager({
   initialOverview: InventoryOverview | null;
   loadError: string | null;
 }) {
+  const { showToast } = useToast();
   const [overview, setOverview] = useState<InventoryOverview | null>(initialOverview);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
@@ -208,8 +210,15 @@ export function AdminInventoryManager({
         setEntryProductQuery(selectedProduct.name);
       }
       setFeedback("Entrada registrada com sucesso e estoque atualizado.");
+      showToast({
+        tone: "success",
+        title: "Entrada registrada",
+        description: selectedProduct ? selectedProduct.name : "Estoque atualizado."
+      });
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Nao foi possivel registrar a entrada.");
+      const text = error instanceof Error ? error.message : "Nao foi possivel registrar a entrada.";
+      setFeedback(text);
+      showToast({ tone: "error", title: "Falha ao registrar entrada", description: text });
     } finally {
       setLoading(false);
     }

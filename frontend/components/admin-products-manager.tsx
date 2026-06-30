@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useToast } from "@/components/toast-provider";
 import { Button } from "@/components/ui/button";
 import { hasRealCategoryIds, type Category } from "@/lib/api";
 import type { Product } from "@/lib/data";
@@ -163,6 +164,7 @@ export function AdminProductsManager({
   loadError: string | null;
 }) {
   const router = useRouter();
+  const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [products, setProducts] = useState(initialProducts);
   const [message, setMessage] = useState<string | null>(null);
@@ -402,7 +404,9 @@ export function AdminProductsManager({
     event.preventDefault();
 
     if (!canSubmit) {
-      setMessage("As categorias reais do backend nao foram carregadas. O cadastro foi bloqueado para evitar dados invalidos.");
+      const text = "As categorias reais do backend nao foram carregadas. O cadastro foi bloqueado para evitar dados invalidos.";
+      setMessage(text);
+      showToast({ tone: "error", title: "Cadastro bloqueado", description: text });
       return;
     }
 
@@ -436,14 +440,18 @@ export function AdminProductsManager({
       if (editingId) {
         setProducts((current) => current.map((product) => (product.id === editingId ? mappedProduct : product)));
         setMessage("Produto atualizado com sucesso.");
+        showToast({ tone: "success", title: "Produto atualizado", description: mappedProduct.name });
       } else {
         setProducts((current) => [mappedProduct, ...current]);
         setMessage("Produto cadastrado com sucesso.");
+        showToast({ tone: "success", title: "Produto cadastrado", description: mappedProduct.name });
       }
 
       resetForm();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Falha ao salvar produto.");
+      const text = error instanceof Error ? error.message : "Falha ao salvar produto.";
+      setMessage(text);
+      showToast({ tone: "error", title: "Falha ao salvar produto", description: text });
     } finally {
       setLoading(false);
       setUploadStage("idle");
@@ -494,7 +502,9 @@ export function AdminProductsManager({
         fileInputRef.current.value = "";
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Nao foi possivel carregar o produto.");
+      const text = error instanceof Error ? error.message : "Nao foi possivel carregar o produto.";
+      setMessage(text);
+      showToast({ tone: "error", title: "Falha ao carregar produto", description: text });
     } finally {
       setEditingLoading(null);
     }
@@ -525,8 +535,11 @@ export function AdminProductsManager({
         resetForm();
       }
       setMessage("Produto excluido com sucesso.");
+      showToast({ tone: "success", title: "Produto excluido", description: "Item removido da vitrine." });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Falha ao excluir produto.");
+      const text = error instanceof Error ? error.message : "Falha ao excluir produto.";
+      setMessage(text);
+      showToast({ tone: "error", title: "Falha ao excluir produto", description: text });
     } finally {
       setDeletingId(null);
     }

@@ -3,10 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useNavigationFeedback } from "@/components/navigation-feedback-provider";
+import { useToast } from "@/components/toast-provider";
 import { Button } from "@/components/ui/button";
 
 export function AdminLoginForm({ next }: { next: string }) {
   const router = useRouter();
+  const { startNavigation } = useNavigationFeedback();
+  const { showToast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -29,10 +33,21 @@ export function AdminLoginForm({ next }: { next: string }) {
         throw new Error(result?.message ?? "Acesso administrativo invalido.");
       }
 
+      showToast({
+        tone: "success",
+        title: "Login admin realizado",
+        description: "Abrindo o painel gerencial."
+      });
+      startNavigation(next);
       router.push(next);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha ao entrar.");
+      showToast({
+        tone: "error",
+        title: "Falha no acesso admin",
+        description: "Confira as credenciais e tente novamente."
+      });
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { useToast } from "@/components/toast-provider";
 import { Button } from "@/components/ui/button";
 
 type WhatsAppGroup = {
@@ -62,6 +63,7 @@ function statusBadge(status: string) {
 }
 
 export function AdminWhatsAppSettings() {
+  const { showToast } = useToast();
   const [groups, setGroups] = useState<WhatsAppGroup[]>([]);
   const [jobs, setJobs] = useState<WhatsAppJob[]>([]);
   const [logs, setLogs] = useState<WhatsAppLog[]>([]);
@@ -88,7 +90,9 @@ export function AdminWhatsAppSettings() {
       setJobs(result.jobs);
       setLogs(result.logs);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Nao foi possivel carregar configuracoes do WhatsApp.");
+      const text = error instanceof Error ? error.message : "Nao foi possivel carregar configuracoes do WhatsApp.";
+      setMessage(text);
+      showToast({ tone: "error", title: "Falha ao carregar WhatsApp", description: text });
     } finally {
       setLoading(false);
     }
@@ -125,8 +129,15 @@ export function AdminWhatsAppSettings() {
       await loadOverview();
       resetForm();
       setMessage(editingId ? "Grupo atualizado com sucesso." : "Grupo cadastrado com sucesso.");
+      showToast({
+        tone: "success",
+        title: editingId ? "Grupo atualizado" : "Grupo cadastrado",
+        description: form.name
+      });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Nao foi possivel salvar o grupo.");
+      const text = error instanceof Error ? error.message : "Nao foi possivel salvar o grupo.";
+      setMessage(text);
+      showToast({ tone: "error", title: "Falha ao salvar grupo", description: text });
     } finally {
       setSaving(false);
     }
@@ -148,8 +159,11 @@ export function AdminWhatsAppSettings() {
         resetForm();
       }
       setMessage("Grupo removido com sucesso.");
+      showToast({ tone: "success", title: "Grupo removido", description: "Destino de divulgacao excluido." });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Nao foi possivel excluir o grupo.");
+      const text = error instanceof Error ? error.message : "Nao foi possivel excluir o grupo.";
+      setMessage(text);
+      showToast({ tone: "error", title: "Falha ao excluir grupo", description: text });
     } finally {
       setDeletingId(null);
     }
