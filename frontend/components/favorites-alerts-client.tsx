@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
+import { NavigationLink } from "@/components/navigation-link";
 import { createProductArrivalAlert, type Category } from "@/lib/api";
 import type { Product } from "@/lib/data";
 import { Button } from "@/components/ui/button";
@@ -124,9 +124,9 @@ export function FavoritesAlertsClient({
               <h2 className="text-2xl font-semibold text-black">Sugestoes rapidas</h2>
               <p className="mt-2 text-sm text-black/58">Toque em um item para preencher o nome automaticamente.</p>
             </div>
-            <Link href="/catalogo" className="hidden text-sm font-medium text-black/70 md:block">
+            <NavigationLink href="/catalogo" className="hidden text-sm font-medium text-black/70 md:block">
               Abrir catalogo
-            </Link>
+            </NavigationLink>
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">

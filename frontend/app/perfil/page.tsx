@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
-import Link from "next/link";
 
 import { AUTH_USER_COOKIE } from "@/lib/admin-auth";
+import { NavigationLink } from "@/components/navigation-link";
 
 type AuthUser = {
   id: string;
@@ -21,8 +21,8 @@ export default async function ProfilePage() {
           <h1 className="font-display text-4xl text-black">Entre para ver seu perfil</h1>
           <p className="mt-3 text-black/60">Sua conta ainda nao esta autenticada nesta sessao.</p>
           <div className="mt-6 flex gap-3">
-            <Link href="/login" className="rounded-full bg-black px-5 py-3 text-sm text-white">Entrar</Link>
-            <Link href="/cadastro" className="rounded-full border border-black/10 px-5 py-3 text-sm text-black">Criar conta</Link>
+            <NavigationLink href="/login" className="rounded-full bg-black px-5 py-3 text-sm text-white">Entrar</NavigationLink>
+            <NavigationLink href="/cadastro" className="rounded-full border border-black/10 px-5 py-3 text-sm text-black">Criar conta</NavigationLink>
           </div>
         </div>
       </main>

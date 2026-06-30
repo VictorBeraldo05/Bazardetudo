@@ -2,10 +2,10 @@ import { Search } from "lucide-react";
 
 import { OffersShowcase } from "@/components/offers-showcase";
 import { ProductCard } from "@/components/product-card";
-import { getOfferProducts, getProducts } from "@/lib/api";
+import { getCatalogData, getOfferProducts } from "@/lib/api";
 
 export default async function HomePage() {
-  const products = await getProducts();
+  const { products } = await getCatalogData();
   const offers = getOfferProducts(products).slice(0, 8);
   const latest = products.slice(0, 8);
   const spotlightProducts = offers.length > 0 ? offers : latest.slice(0, 5);

@@ -1,5 +1,5 @@
 import { CatalogClient } from "@/components/catalog-client";
-import { getCategories, getProducts } from "@/lib/api";
+import { getCatalogData } from "@/lib/api";
 
 export default async function CatalogPage({
   searchParams
@@ -7,7 +7,7 @@ export default async function CatalogPage({
   searchParams?: Promise<{ filtro?: string }>;
 }) {
   const params = await searchParams;
-  const [categories, products] = await Promise.all([getCategories(), getProducts()]);
+  const { categories, products } = await getCatalogData();
   const initial = params?.filtro?.replaceAll("-", " ");
 
   return (

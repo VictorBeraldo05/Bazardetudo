@@ -1,11 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
+import { NavigationLink } from "@/components/navigation-link";
 import { ProductActions } from "@/components/product-actions";
 import { ShareProductButton } from "@/components/share-product-button";
-import { getProductBySlug, getProducts } from "@/lib/api";
+import { getCatalogData, getProductBySlug } from "@/lib/api";
 import { ProductCard } from "@/components/product-card";
 import { money } from "@/lib/utils";
 
@@ -17,14 +17,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     notFound();
   }
 
-  const suggestions = (await getProducts()).filter((item) => item.slug !== product.slug).slice(0, 4);
+  const { products } = await getCatalogData();
+  const suggestions = products.filter((item) => item.slug !== product.slug).slice(0, 4);
 
   return (
     <main className="shell space-y-8 py-4 md:space-y-10 md:py-8">
       <div className="hidden items-center gap-2 text-sm text-black/45 md:flex">
-        <Link href="/">Home</Link>
+        <NavigationLink href="/">Home</NavigationLink>
         <ChevronRight size={16} />
-        <Link href="/catalogo">Catalogo</Link>
+        <NavigationLink href="/catalogo">Catalogo</NavigationLink>
         <ChevronRight size={16} />
         <span>{product.name}</span>
       </div>

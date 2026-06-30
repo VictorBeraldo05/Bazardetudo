@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { NavigationLink } from "@/components/navigation-link";
 import type { Product } from "@/lib/data";
 import { money } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -45,14 +45,14 @@ export function OffersShowcase({ products }: { products: Product[] }) {
                 <p className="text-xs text-white/45 line-through md:text-base">{money(product.compareAtPrice)}</p>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 md:mt-6 md:gap-2.5">
-                <Link href={`/produto/${product.slug}`}>
+                <NavigationLink href={`/produto/${product.slug}`}>
                   <Button className="h-8 rounded-full bg-[#d9482f] px-3 text-xs text-white hover:opacity-95 md:h-auto md:px-5 md:py-3 md:text-sm">Ver oferta</Button>
-                </Link>
-                <Link href="/catalogo?filtro=ofertas" className="hidden sm:block">
+                </NavigationLink>
+                <NavigationLink href="/catalogo?filtro=ofertas" className="hidden sm:block">
                   <Button variant="outline" className="h-10 border-white/15 bg-white/10 px-4 text-sm text-white hover:bg-white/15 md:h-auto md:px-5 md:py-3">
                     Ver promocoes
                   </Button>
-                </Link>
+                </NavigationLink>
               </div>
             </div>
 

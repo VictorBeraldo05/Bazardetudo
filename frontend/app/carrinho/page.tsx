@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-
+import { NavigationLink } from "@/components/navigation-link";
 import { Button } from "@/components/ui/button";
 import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
@@ -58,12 +57,11 @@ export default function CartPage() {
               <span>{money(total + (items.length ? 39.9 : 0))}</span>
             </div>
           </div>
-          <Link href="/checkout" className="block">
+          <NavigationLink href="/checkout" className="block">
             <Button className="mt-6 w-full" disabled={items.length === 0}>Finalizar compra</Button>
-          </Link>
+          </NavigationLink>
         </aside>
       </div>
     </main>
   );
 }
-

@@ -1,5 +1,5 @@
 import { CatalogResultsClient } from "@/components/catalog-results-client";
-import { getCategories, getProducts } from "@/lib/api";
+import { getCatalogData } from "@/lib/api";
 
 function normalizeText(value: string) {
   return value
@@ -14,7 +14,7 @@ type PageProps = {
 
 export default async function CatalogCategoryPage({ params }: PageProps) {
   const { slug } = await params;
-  const [categories, products] = await Promise.all([getCategories(), getProducts()]);
+  const { categories, products } = await getCatalogData();
 
   const category = categories.find((item) => item.slug === slug);
   const filtered = products.filter((product) => normalizeText(product.categorySlug ?? "") === normalizeText(slug));

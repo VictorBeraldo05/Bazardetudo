@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 
+import { NavigationLink } from "@/components/navigation-link";
 import type { Product } from "@/lib/data";
 import { money } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -32,14 +32,14 @@ export function ProductCard({ product, compact = false }: { product: Product; co
       <div className={`space-y-2 ${compact ? "p-2.5" : "p-2.5 md:space-y-3 md:p-4"}`}>
         <div className={`space-y-1 ${compact ? "" : "md:space-y-1.5"}`}>
           <p className={`uppercase text-black/40 ${compact ? "text-[8px] tracking-[0.14em]" : "text-[9px] tracking-[0.16em] md:text-xs md:tracking-[0.2em]"}`}>{product.category}</p>
-          <Link
+          <NavigationLink
             href={`/produto/${product.slug}`}
             className={`line-clamp-2 font-semibold leading-tight text-black ${
               compact ? "min-h-9 text-[12px]" : "min-h-8 text-[13px] md:min-h-11 md:text-lg"
             }`}
           >
             {product.name}
-          </Link>
+          </NavigationLink>
           {!compact ? <p className="hidden line-clamp-2 text-sm text-black/56 md:block">{product.description}</p> : null}
         </div>
         <div className={`grid gap-2 ${compact ? "" : "sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-3"}`}>
@@ -51,7 +51,7 @@ export function ProductCard({ product, compact = false }: { product: Product; co
             </div>
           </div>
           <div className={`grid grid-cols-2 gap-2 ${compact ? "" : "sm:flex sm:w-auto sm:flex-col sm:items-stretch"}`}>
-            <Link href={`/produto/${product.slug}`}>
+            <NavigationLink href={`/produto/${product.slug}`}>
               <Button
                 variant="outline"
                 className={`w-full border-black/10 text-black hover:bg-black/5 ${
@@ -60,7 +60,7 @@ export function ProductCard({ product, compact = false }: { product: Product; co
               >
                 Ver produto
               </Button>
-            </Link>
+            </NavigationLink>
             <Button
               onClick={() => addItem(product)}
               disabled={product.status !== "available"}

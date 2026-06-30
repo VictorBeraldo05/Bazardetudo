@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useNavigationFeedback } from "@/components/navigation-feedback-provider";
 import type { Product } from "@/lib/data";
 import { reserveProduct } from "@/lib/api";
 import { useCartStore } from "@/store/cart-store";
@@ -11,6 +12,7 @@ import { useCartStore } from "@/store/cart-store";
 export function ProductActions({ product }: { product: Product }) {
   const addItem = useCartStore((state) => state.addItem);
   const router = useRouter();
+  const { startNavigation } = useNavigationFeedback();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -20,6 +22,7 @@ export function ProductActions({ product }: { product: Product }) {
     try {
       await reserveProduct(product.id, 1);
       addItem(product);
+      startNavigation("/checkout");
       router.push("/checkout");
     } catch {
       setMessage("Este item nao pode ser reservado agora.");

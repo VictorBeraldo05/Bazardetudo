@@ -1,9 +1,8 @@
 "use client";
-
-import Link from "next/link";
 import { Heart, Home, Search, ShoppingCart, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 
+import { NavigationLink } from "@/components/navigation-link";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -28,9 +27,10 @@ export function BottomNav() {
           const Icon = item.icon;
           const active = pathname === item.href;
           return (
-            <Link
+            <NavigationLink
               key={item.href}
               href={item.href}
+              prefetch
               className={cn(
                 "flex flex-col items-center gap-0.5 rounded-[1.1rem] px-2 py-2 text-[11px]",
                 active ? "bg-white text-black" : "text-white/70"
@@ -38,7 +38,7 @@ export function BottomNav() {
             >
               <Icon size={16} />
               {item.label}
-            </Link>
+            </NavigationLink>
           );
         })}
       </div>

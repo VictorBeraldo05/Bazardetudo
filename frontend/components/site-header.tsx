@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { Heart, Search, ShoppingCart, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 
+import { NavigationLink } from "@/components/navigation-link";
 import { topSearches } from "@/lib/data";
 import { useCartStore } from "@/store/cart-store";
 
@@ -21,13 +21,13 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-black/5 bg-[#fffdf9]/95 text-black backdrop-blur-xl">
       <div className={`${frame} py-2 md:pt-2`}>
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
-          <Link href="/" className="flex items-center gap-2.5">
+          <NavigationLink href="/" prefetch className="flex items-center gap-2.5">
             <Image src="/logo-bazar.png" alt="Bazar de Tudo" width={68} height={68} className="h-12 w-12 rounded-[1.15rem] border border-black/5 bg-white object-cover p-1 md:h-14 md:w-14 md:rounded-2xl" />
             <div>
               <p className="font-display text-[1.9rem] leading-none tracking-tight text-black md:text-3xl">Bazar de Tudo</p>
               <p className="text-[9px] uppercase tracking-[0.18em] text-black/45 md:text-xs md:tracking-[0.24em]">casa, eletros, decoracao e oportunidades</p>
             </div>
-          </Link>
+          </NavigationLink>
 
           <div className="hidden w-full flex-1 md:block">
             <div className="flex h-10 overflow-hidden rounded-[1.1rem] border border-black/10 bg-white shadow-sm md:h-14 md:rounded-2xl">
@@ -48,30 +48,30 @@ export function SiteHeader() {
           </div>
 
           <div className="hidden md:flex md:w-auto md:items-center md:gap-2">
-            <Link href="/favoritos" className="flex items-center justify-center rounded-[1rem] border border-black/10 bg-white p-2 text-black/80 md:rounded-2xl md:p-3">
+            <NavigationLink href="/favoritos" className="flex items-center justify-center rounded-[1rem] border border-black/10 bg-white p-2 text-black/80 md:rounded-2xl md:p-3">
               <Heart size={18} />
-            </Link>
-            <Link href="/perfil" className="flex items-center justify-center rounded-[1rem] border border-black/10 bg-white p-2 text-black/80 md:rounded-2xl md:p-3">
+            </NavigationLink>
+            <NavigationLink href="/perfil" className="flex items-center justify-center rounded-[1rem] border border-black/10 bg-white p-2 text-black/80 md:rounded-2xl md:p-3">
               <User size={18} />
-            </Link>
-            <Link href="/carrinho" className="relative flex items-center justify-center rounded-[1rem] border border-black/10 bg-white p-2 text-black md:rounded-2xl md:p-3">
+            </NavigationLink>
+            <NavigationLink href="/carrinho" className="relative flex items-center justify-center rounded-[1rem] border border-black/10 bg-white p-2 text-black md:rounded-2xl md:p-3">
               <ShoppingCart size={18} />
               {count > 0 ? (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#8b6743] text-[10px] font-semibold text-white md:-right-2 md:-top-2 md:h-6 md:w-6 md:text-[11px]">
                   {count}
                 </span>
               ) : null}
-            </Link>
+            </NavigationLink>
           </div>
         </div>
 
         <nav className="mt-2 hidden items-center gap-6 overflow-x-auto pb-2 text-sm font-medium text-black/72 md:flex">
-          <Link href="/catalogo">Catalogo completo</Link>
-          <Link href="/catalogo?filtro=ofertas">Promocoes</Link>
-          <Link href="/catalogo?filtro=moveis">Moveis</Link>
-          <Link href="/catalogo?filtro=eletrodomesticos">Eletrodomesticos</Link>
-          <Link href="/catalogo?filtro=decoracao">Decoracao</Link>
-          <Link href="/pedidos">Meus pedidos</Link>
+          <NavigationLink href="/catalogo" prefetch>Catalogo completo</NavigationLink>
+          <NavigationLink href="/catalogo?filtro=ofertas" prefetch>Promocoes</NavigationLink>
+          <NavigationLink href="/catalogo?filtro=moveis" prefetch>Moveis</NavigationLink>
+          <NavigationLink href="/catalogo?filtro=eletrodomesticos" prefetch>Eletrodomesticos</NavigationLink>
+          <NavigationLink href="/catalogo?filtro=decoracao" prefetch>Decoracao</NavigationLink>
+          <NavigationLink href="/pedidos" prefetch>Meus pedidos</NavigationLink>
         </nav>
       </div>
     </header>

@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { categories as fallbackCategories, products as fallbackProducts, type Product } from "@/lib/data";
 
 export type Category = {
@@ -41,6 +43,7 @@ export type ApiProduct = {
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+const CATALOG_REVALIDATE_SECONDS = 120;
 
 function fallbackProductMap(): Product[] {
   return fallbackProducts;
@@ -61,7 +64,12 @@ export function getSessionToken() {
   return token;
 }
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+type RequestJsonOptions = {
+  cache?: RequestCache;
+  revalidate?: number;
+};
+
+async function requestJson<T>(path: string, init?: RequestInit, options?: RequestJsonOptions): Promise<T> {
   const target = path.startsWith("/api/") ? path : `${API_URL}${path}`;
   const response = await fetch(target, {
     ...init,
@@ -69,7 +77,8 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
       "Content-Type": "application/json",
       ...(init?.headers ?? {})
     },
-    cache: "no-store"
+    cache: options?.cache ?? "no-store",
+    next: options?.revalidate ? { revalidate: options.revalidate } : undefined
   });
 
   if (!response.ok) {
@@ -95,16 +104,23 @@ function isUuid(value: string) {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  try {
-    return await requestJson<Category[]>("/categories");
-  } catch {
-    return fallbackCategories.map((name, index) => ({ id: String(index), name, slug: name.toLowerCase(), subcategories: [] }));
-  }
+  return getCatalogCategories();
 }
 
 export async function getCategoriesStrict(): Promise<Category[]> {
   return requestJson<Category[]>("/categories");
 }
+
+const getCatalogCategories = cache(async (): Promise<Category[]> => {
+  try {
+    return await requestJson<Category[]>("/categories", undefined, {
+      cache: "force-cache",
+      revalidate: CATALOG_REVALIDATE_SECONDS
+    });
+  } catch {
+    return fallbackCategories.map((name, index) => ({ id: String(index), name, slug: name.toLowerCase(), subcategories: [] }));
+  }
+});
 
 export function mapApiProduct(product: ApiProduct, categories: Category[]): Product {
   const categoryData = categories.find((item) => item.id === product.category_id);
@@ -136,16 +152,30 @@ export function mapApiProduct(product: ApiProduct, categories: Category[]): Prod
   };
 }
 
-export async function getProducts(): Promise<Product[]> {
+export const getCatalogData = cache(async (): Promise<{ categories: Category[]; products: Product[] }> => {
   try {
     const [categories, products] = await Promise.all([
-      getCategories(),
-      requestJson<ApiProduct[]>("/products")
+      getCatalogCategories(),
+      requestJson<ApiProduct[]>("/products", undefined, {
+        cache: "force-cache",
+        revalidate: CATALOG_REVALIDATE_SECONDS
+      })
     ]);
-    return products.map((product) => mapApiProduct(product, categories));
+
+    return {
+      categories,
+      products: products.map((product) => mapApiProduct(product, categories))
+    };
   } catch {
-    return fallbackProductMap();
+    return {
+      categories: fallbackCategories.map((name, index) => ({ id: String(index), name, slug: name.toLowerCase(), subcategories: [] })),
+      products: fallbackProductMap()
+    };
   }
+});
+
+export async function getProducts(): Promise<Product[]> {
+  return (await getCatalogData()).products;
 }
 
 export async function getProductsStrict(): Promise<Product[]> {
@@ -159,8 +189,11 @@ export async function getProductsStrict(): Promise<Product[]> {
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     const [categories, product] = await Promise.all([
-      getCategories(),
-      requestJson<ApiProduct>(`/products/slug/${slug}`)
+      getCatalogCategories(),
+      requestJson<ApiProduct>(`/products/slug/${slug}`, undefined, {
+        cache: "force-cache",
+        revalidate: 120
+      })
     ]);
     return mapApiProduct(product, categories);
   } catch {

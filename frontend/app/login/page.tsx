@@ -1,13 +1,14 @@
 "use client";
-
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useNavigationFeedback } from "@/components/navigation-feedback-provider";
+import { NavigationLink } from "@/components/navigation-link";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { startNavigation } = useNavigationFeedback();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,9 @@ export default function LoginPage() {
         throw new Error(result?.message ?? "Nao foi possivel entrar.");
       }
 
-      router.push(result?.user?.is_admin ? "/admin" : "/perfil");
+      const nextPath = result?.user?.is_admin ? "/admin" : "/perfil";
+      startNavigation(nextPath);
+      router.push(nextPath);
       router.refresh();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Nao foi possivel entrar.");
@@ -64,8 +67,8 @@ export default function LoginPage() {
           </Button>
         </form>
         <div className="mt-6 flex items-center justify-between text-sm text-black/55">
-          <Link href="/cadastro">Criar conta</Link>
-          <Link href="/admin/login">Acesso admin</Link>
+          <NavigationLink href="/cadastro">Criar conta</NavigationLink>
+          <NavigationLink href="/admin/login">Acesso admin</NavigationLink>
         </div>
       </div>
     </main>
