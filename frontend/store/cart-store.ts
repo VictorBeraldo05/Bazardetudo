@@ -10,6 +10,7 @@ type CartStore = {
   items: CartItem[];
   addItem: (product: Product) => void;
   removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
 };
 
@@ -28,5 +29,17 @@ export const useCartStore = create<CartStore>((set) => ({
       return { items: [...state.items, { ...product, quantity: 1 }] };
     }),
   removeItem: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
+  updateQuantity: (id, quantity) =>
+    set((state) => {
+      if (quantity <= 0) {
+        return { items: state.items.filter((item) => item.id !== id) };
+      }
+
+      return {
+        items: state.items.map((item) =>
+          item.id === id ? { ...item, quantity } : item
+        )
+      };
+    }),
   clearCart: () => set({ items: [] })
 }));
