@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useNavigationFeedback } from "@/components/navigation-feedback-provider";
+import { useToast } from "@/components/toast-provider";
 import type { Product } from "@/lib/data";
 import { reserveProduct } from "@/lib/api";
 import { useCartStore } from "@/store/cart-store";
@@ -13,6 +14,7 @@ export function ProductActions({ product }: { product: Product }) {
   const addItem = useCartStore((state) => state.addItem);
   const router = useRouter();
   const { startNavigation } = useNavigationFeedback();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -22,10 +24,20 @@ export function ProductActions({ product }: { product: Product }) {
     try {
       await reserveProduct(product.id, 1);
       addItem(product);
+      showToast({
+        tone: "success",
+        title: "Produto reservado",
+        description: "Estamos levando voce para o checkout."
+      });
       startNavigation("/checkout");
       router.push("/checkout");
     } catch {
       setMessage("Este item nao pode ser reservado agora.");
+      showToast({
+        tone: "error",
+        title: "Nao foi possivel reservar",
+        description: "Tente novamente em instantes."
+      });
     } finally {
       setLoading(false);
     }
@@ -44,7 +56,14 @@ export function ProductActions({ product }: { product: Product }) {
 
         <Button
           variant="outline"
-          onClick={() => addItem(product)}
+          onClick={() => {
+            addItem(product);
+            showToast({
+              tone: "success",
+              title: "Produto adicionado ao carrinho",
+              description: product.name
+            });
+          }}
           className="h-14 w-full rounded-[1.35rem] border-[#d8c4af] bg-[#fffaf3] px-6 text-base font-semibold text-[#7f5634] transition hover:bg-[#f8eddc]"
         >
           Adicionar ao carrinho

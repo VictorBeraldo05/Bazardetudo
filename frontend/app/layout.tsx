@@ -5,6 +5,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { NavigationFeedbackProvider } from "@/components/navigation-feedback-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { ToastProvider } from "@/components/toast-provider";
 
 export const metadata: Metadata = {
   title: "Bazar de Tudo",
@@ -22,10 +23,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="pt-BR">
       <body>
         <NavigationFeedbackProvider>
-          <SiteHeader />
-          {children}
-          <SiteFooter />
-          <BottomNav />
+          <ToastProvider>
+            <SiteHeader />
+            {children}
+            <SiteFooter />
+            <BottomNav />
+          </ToastProvider>
         </NavigationFeedbackProvider>
       </body>
     </html>

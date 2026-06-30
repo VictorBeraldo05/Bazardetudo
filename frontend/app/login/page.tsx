@@ -5,10 +5,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigationFeedback } from "@/components/navigation-feedback-provider";
 import { NavigationLink } from "@/components/navigation-link";
+import { useToast } from "@/components/toast-provider";
 
 export default function LoginPage() {
   const router = useRouter();
   const { startNavigation } = useNavigationFeedback();
+  const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,11 +33,21 @@ export default function LoginPage() {
       }
 
       const nextPath = result?.user?.is_admin ? "/admin" : "/perfil";
+      showToast({
+        tone: "success",
+        title: "Login realizado",
+        description: result?.user?.is_admin ? "Abrindo painel administrativo." : "Abrindo seu perfil."
+      });
       startNavigation(nextPath);
       router.push(nextPath);
       router.refresh();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Nao foi possivel entrar.");
+      showToast({
+        tone: "error",
+        title: "Falha no login",
+        description: "Verifique e-mail e senha."
+      });
     } finally {
       setLoading(false);
     }

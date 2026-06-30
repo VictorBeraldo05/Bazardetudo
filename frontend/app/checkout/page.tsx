@@ -7,6 +7,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
+import { useNavigationFeedback } from "@/components/navigation-feedback-provider";
+import { useToast } from "@/components/toast-provider";
 import { checkoutOrder, reserveProduct, upsertCustomer } from "@/lib/api";
 import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
@@ -27,6 +29,8 @@ export default function CheckoutPage() {
   const items = useCartStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clearCart);
   const router = useRouter();
+  const { startNavigation } = useNavigationFeedback();
+  const { showToast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const shippingAmount = 39.9;
@@ -74,9 +78,20 @@ export default function CheckoutPage() {
       });
 
       clearCart();
+      showToast({
+        tone: "success",
+        title: "Pedido confirmado",
+        description: `Numero ${order.order_number}`
+      });
+      startNavigation(`/pedidos?sucesso=${order.order_number}`);
       router.push(`/pedidos?sucesso=${order.order_number}`);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Nao foi possivel concluir o checkout.");
+      showToast({
+        tone: "error",
+        title: "Falha ao concluir pedido",
+        description: "Confira os dados e tente novamente."
+      });
     } finally {
       setSubmitting(false);
     }

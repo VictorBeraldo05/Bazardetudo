@@ -1,12 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { NavigationLink } from "@/components/navigation-link";
+import { useNavigationFeedback } from "@/components/navigation-feedback-provider";
+import { useToast } from "@/components/toast-provider";
 import { Button } from "@/components/ui/button";
 import { registerCustomer } from "@/lib/api";
 
@@ -32,6 +34,8 @@ function onlyDigits(value: string) {
 
 export default function SignupPage() {
   const router = useRouter();
+  const { startNavigation } = useNavigationFeedback();
+  const { showToast } = useToast();
   const [feedback, setFeedback] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -61,9 +65,20 @@ export default function SignupPage() {
       });
 
       setFeedback("Conta criada com sucesso. Agora voce ja pode entrar.");
+      showToast({
+        tone: "success",
+        title: "Conta criada com sucesso",
+        description: "Voce ja pode entrar e finalizar suas compras."
+      });
+      startNavigation("/login");
       router.push("/login");
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Nao foi possivel criar a conta.");
+      showToast({
+        tone: "error",
+        title: "Falha ao criar conta",
+        description: "Confira os dados digitados e tente novamente."
+      });
     } finally {
       setSubmitting(false);
     }
@@ -97,8 +112,8 @@ export default function SignupPage() {
           </Button>
         </form>
         <div className="mt-6 flex items-center justify-between text-sm text-black/55">
-          <Link href="/login">Ja tenho conta</Link>
-          <Link href="/contato">Preciso de ajuda</Link>
+          <NavigationLink href="/login">Ja tenho conta</NavigationLink>
+          <NavigationLink href="/contato">Preciso de ajuda</NavigationLink>
         </div>
       </div>
     </main>

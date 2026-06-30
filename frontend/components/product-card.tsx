@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 import { NavigationLink } from "@/components/navigation-link";
+import { useToast } from "@/components/toast-provider";
 import type { Product } from "@/lib/data";
 import { money } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -10,12 +11,13 @@ import { useCartStore } from "@/store/cart-store";
 
 export function ProductCard({ product, compact = false }: { product: Product; compact?: boolean }) {
   const addItem = useCartStore((state) => state.addItem);
+  const { showToast } = useToast();
   const discount = Math.max(0, Math.round((1 - product.price / product.compareAtPrice) * 100));
 
   return (
     <article
       className={`overflow-hidden border border-black/5 bg-white shadow-card transition duration-200 hover:-translate-y-1 ${
-        compact ? "rounded-[1rem]" : "rounded-[1.15rem] md:rounded-[1.4rem]"
+        compact ? "rounded-[1rem] active:scale-[0.992]" : "rounded-[1.15rem] active:scale-[0.992] md:rounded-[1.4rem]"
       }`}
     >
       <div className={`relative overflow-hidden bg-[#f6f1e8] ${compact ? "aspect-[4/4]" : "aspect-[4/4.15]"}`}>
@@ -62,7 +64,14 @@ export function ProductCard({ product, compact = false }: { product: Product; co
               </Button>
             </NavigationLink>
             <Button
-              onClick={() => addItem(product)}
+              onClick={() => {
+                addItem(product);
+                showToast({
+                  tone: "success",
+                  title: "Produto adicionado ao carrinho",
+                  description: product.name
+                });
+              }}
               disabled={product.status !== "available"}
               className={`w-full bg-[#171717] text-white hover:opacity-95 ${
                 compact ? "h-8 rounded-lg px-2 text-[10px]" : "h-8 rounded-xl px-2.5 text-[10px] md:h-9 md:px-4 md:py-2 md:text-xs"

@@ -19,6 +19,17 @@
   }
 }
 
+@keyframes toast-in {
+  0% {
+    transform: translateY(12px) scale(0.98);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
 :root {
   --background: #f7f4ee;
   --foreground: #171717;

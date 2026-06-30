@@ -2,12 +2,14 @@
 
 import { NavigationLink } from "@/components/navigation-link";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/toast-provider";
 import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
 
 export default function CartPage() {
   const items = useCartStore((state) => state.items);
   const removeItem = useCartStore((state) => state.removeItem);
+  const { showToast } = useToast();
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
@@ -35,7 +37,17 @@ export default function CartPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-semibold text-black">{money(item.price * item.quantity)}</p>
-                  <button className="mt-2 text-sm text-black/50" onClick={() => removeItem(item.id)}>
+                  <button
+                    className="mt-2 text-sm text-black/50 transition hover:text-black active:scale-[0.985]"
+                    onClick={() => {
+                      removeItem(item.id);
+                      showToast({
+                        tone: "info",
+                        title: "Item removido do carrinho",
+                        description: item.name
+                      });
+                    }}
+                  >
                     Remover
                   </button>
                 </div>
